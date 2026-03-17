@@ -1,0 +1,442 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Righteous&family=DM+Sans:wght@400;500;700&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  .app {
+    font-family: 'DM Sans', sans-serif;
+    min-height: 700px;
+    padding: 2rem 1rem 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+  }
+
+  h1 {
+    font-family: 'Righteous', cursive;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    color: var(--color-text-primary);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: -1rem;
+  }
+
+  .wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .wheel-wrapper {
+    position: relative;
+    width: 340px;
+    height: 340px;
+  }
+
+  .pointer {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 28px solid #E24B4A;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    z-index: 10;
+  }
+
+  canvas {
+    border-radius: 50%;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    display: block;
+  }
+
+  .spin-btn {
+    padding: 0.75rem 2.5rem;
+    font-family: 'Righteous', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    background: #E24B4A;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 4px 12px rgba(226, 75, 74, 0.35);
+  }
+
+  .spin-btn:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 18px rgba(226, 75, 74, 0.45);
+  }
+
+  .spin-btn:active {
+    transform: scale(0.97);
+  }
+
+  .spin-btn:disabled {
+    background: var(--color-text-secondary);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .result-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s;
+  }
+
+  .result-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .result-name {
+    font-family: 'Righteous', cursive;
+    font-size: 1.8rem;
+    color: #E24B4A;
+  }
+
+  .result-placeholder {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+
+  .history-section {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .history-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .history-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 50px;
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+
+  .reset-btn {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    border: 0.5px solid var(--color-border-secondary);
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.15s;
+  }
+
+  .reset-btn:hover {
+    background: var(--color-background-secondary);
+  }
+
+  .confetti-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    animation: fall 1.4s ease-in forwards;
+  }
+
+  @keyframes fall {
+    0% {
+      opacity: 1;
+      transform: translateY(-10px) rotate(0deg);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(600px) rotate(720deg);
+    }
+  }
+</style>
+
+<div class="app">
+  <h1>Ruleta de Alumnos</h1>
+  <p class="subtitle">Gira la ruleta para seleccionar un alumno</p>
+
+  <div class="wheel-section">
+    <div class="wheel-wrapper">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="340" height="340"></canvas>
+    </div>
+    <button class="spin-btn" id="spinBtn" onclick="spinWheel()">¡GIRAR!</button>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <p class="result-placeholder">Presiona GIRAR para seleccionar un alumno</p>
+  </div>
+
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="history-title">Alumnos seleccionados</div>
+    <div class="history-tags" id="historyTags"></div>
+    <button class="reset-btn" onclick="resetHistory()">Reiniciar historial</button>
+  </div>
+</div>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<script>
+  const STUDENTS = [
+"ROSA ARELI ANTOLIN AGUSTIN",
+"DIANA MAYTE REYES ALTAMIRANO",
+"DAYAN MICHELLE AREVALO ALVAREZ",
+"SAMUEL OCAMPO ARMAS",
+"GABRIEL ROMERO DE ANDA",
+"FERNANDO SAUL HERNANDEZ DOMINGUEZ",
+"MICHEL BECERRIL GONZALEZ",
+"KEVIN OSWALDO OREA GUTIERREZ",
+"ALAN URIEL ROSALES HERNANDEZ",
+"FERNANDA MICHELLE ORAN LARA",
+"FABIOLA MARTINEZ LAUREANO",
+"VICTOR MANUEL MEJIA MORALES",
+"ITZEL FLORES RAMIREZ",
+"BETZY PERLA SOLIS RAMIREZ",
+"ERIKA NAOMI RODRIGUEZ RODRIGUEZ",
+"MARCO URIEL HURTADO ROMERO",
+"MAURO JIMENEZ SALINAS",
+"ISAAC CAMACHO SANCHEZ",
+"ANGEL DE JESUS TEJAS TORRES",
+"VALERIA DOMINGUEZ VARGAS",
+"MELISSA OSEGUERA VELASCO",
+"MARIA MONTSERRAT VARGAS VERA",
+"ALONDRA NAHOMI JUAREZ ZEPEDA"
+];
+
+  const COLORS = [
+    "#4A90D9", "#E24B4A", "#2DB87F", "#F5A623", "#7B68EE",
+    "#E96D8C", "#3ABFBF", "#FF7043", "#8BC34A", "#AB47BC"
+  ];
+
+  let spinning = false;
+  let currentAngle = 0;
+  let history = [];
+  let remaining = [...STUDENTS];
+
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const cx = 170, cy = 170, R = 162;
+
+  function drawWheel(angle) {
+    ctx.clearRect(0, 0, 340, 340);
+    const n = remaining.length;
+    if (n === 0) {
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 18px DM Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText('¡Todos seleccionados!', cx, cy);
+      return;
+    }
+    const slice = (2 * Math.PI) / n;
+
+    for (let i = 0; i < n; i++) {
+      const start = angle + i * slice;
+      const end = start + slice;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R, start, end);
+      ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(start + slice / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fff';
+
+      const parts = remaining[i].split(' ');
+      const firstName = parts[0];
+      const lastName = parts.slice(1).join(' ');
+      const fontSize = n > 20 ? 9 : n > 15 ? 10 : 11;
+      ctx.font = `500 ${fontSize}px DM Sans`;
+
+      if (n <= 20) {
+        ctx.fillText(firstName, R - 10, -3);
+        ctx.font = `400 ${fontSize - 1}px DM Sans`;
+        ctx.fillText(lastName, R - 10, 9);
+      } else {
+        const short = firstName.charAt(0) + '. ' + lastName.split(' ')[0];
+        ctx.fillText(short, R - 8, 3);
+      }
+
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#E24B4A';
+    ctx.font = 'bold 22px Righteous, cursive';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★', cx, cy);
+  }
+
+  function spinWheel() {
+    if (spinning || remaining.length === 0) return;
+    spinning = true;
+    document.getElementById('spinBtn').disabled = true;
+
+    const totalSpins = 5 + Math.random() * 5;
+    const extraAngle = Math.random() * 2 * Math.PI;
+    const totalAngle = totalSpins * 2 * Math.PI + extraAngle;
+
+    const duration = 4000 + Math.random() * 1500;
+    const startTime = performance.now();
+    const startAngle = currentAngle;
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOut(progress);
+      currentAngle = startAngle + totalAngle * eased;
+      drawWheel(currentAngle);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        currentAngle = currentAngle % (2 * Math.PI);
+        spinning = false;
+        document.getElementById('spinBtn').disabled = false;
+        showResult();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function showResult() {
+    const n = remaining.length;
+    const slice = (2 * Math.PI) / n;
+    const pointerAngle = (3 * Math.PI / 2);
+    let normalized = ((pointerAngle - currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    const idx = Math.floor(normalized / slice) % n;
+    const winner = remaining[idx];
+
+    const card = document.getElementById('resultCard');
+    card.innerHTML = `<p class="result-label">¡Alumno seleccionado!</p><p class="result-name">${winner}</p>`;
+
+    history.push(winner);
+    remaining.splice(idx, 1);
+    drawWheel(currentAngle);
+    updateHistory();
+    launchConfetti();
+
+    if (remaining.length === 0) {
+      document.getElementById('spinBtn').disabled = true;
+      document.getElementById('spinBtn').textContent = '¡Todos!';
+    }
+  }
+
+  function updateHistory() {
+    const section = document.getElementById('historySection');
+    const tags = document.getElementById('historyTags');
+    section.style.display = 'block';
+    tags.innerHTML = history.map(n => `<span class="tag">${n}</span>`).join('');
+  }
+
+  function resetHistory() {
+    history = [];
+    remaining = [...STUDENTS];
+    document.getElementById('historySection').style.display = 'none';
+    document.getElementById('historyTags').innerHTML = '';
+    const card = document.getElementById('resultCard');
+    card.innerHTML = '<p class="result-placeholder">Presiona GIRAR para seleccionar un alumno</p>';
+    document.getElementById('spinBtn').disabled = false;
+    document.getElementById('spinBtn').textContent = '¡GIRAR!';
+    drawWheel(currentAngle);
+  }
+
+  function launchConfetti() {
+    const wrap = document.getElementById('confettiWrap');
+    wrap.innerHTML = '';
+    const confColors = ['#E24B4A', '#4A90D9', '#2DB87F', '#F5A623', '#7B68EE', '#E96D8C'];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.top = '-10px';
+      el.style.background = confColors[Math.floor(Math.random() * confColors.length)];
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.animationDelay = (Math.random() * 0.6) + 's';
+      el.style.animationDuration = (1.2 + Math.random() * 0.8) + 's';
+      wrap.appendChild(el);
+    }
+    setTimeout(() => wrap.innerHTML = '', 2500);
+  }
+
+  drawWheel(currentAngle);
+</script>
