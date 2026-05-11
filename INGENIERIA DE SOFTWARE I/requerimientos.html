@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requerimientos: Funcionales, No Funcionales y de Dominio</title>
+<style>
+  :root {
+    --primary: #1E2761;
+    --primary-light: #2F3C7E;
+    --secondary: #CADCFC;
+    --accent: #F96167;
+    --gold: #F9E795;
+    --bg: #F7F8FC;
+    --card: #FFFFFF;
+    --text: #1A1F36;
+    --muted: #5A6378;
+    --border: #E1E5EE;
+    --success: #2C8C5A;
+    --error: #C0392B;
+    --func: #2F3C7E;
+    --nofunc: #028090;
+    --dom: #B85042;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Calibri, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  header.app-header {
+    background: var(--primary);
+    color: white;
+    padding: 18px 28px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(30, 39, 97, 0.18);
+  }
+
+  header.app-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  header.app-header .subtitle {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-track {
+    width: 180px;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.4s ease;
+    border-radius: 6px;
+  }
+
+  .progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 55px;
+    text-align: right;
+  }
+
+  /* Slide card */
+  .slide-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 40px 48px;
+    min-height: 520px;
+    box-shadow: 0 6px 20px rgba(30, 39, 97, 0.08);
+    border: 1px solid var(--border);
+    animation: fadeIn 0.45s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-eyebrow {
+    display: inline-block;
+    background: var(--secondary);
+    color: var(--primary);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 18px;
+  }
+
+  .slide-title {
+    font-family: Georgia, 'Cambria', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .slide-subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    margin-bottom: 28px;
+  }
+
+  .slide-body p { margin-bottom: 14px; font-size: 15px; }
+  .slide-body strong { color: var(--primary); }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+  .grid-2-uneven { display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px; margin-top: 18px; }
+
+  .info-card {
+    background: #F7F9FE;
+    border-left: 4px solid var(--primary-light);
+    padding: 16px 18px;
+    border-radius: 8px;
+  }
+
+  .info-card h4 {
+    color: var(--primary);
+    font-size: 15px;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .info-card p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+  /* Agenda items */
+  .agenda-item {
+    display: grid;
+    grid-template-columns: 50px 70px 1fr;
+    gap: 14px;
+    padding: 12px 14px;
+    background: #F7F9FE;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .agenda-num {
+    background: var(--primary);
+    color: white;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .agenda-time {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .agenda-content strong { display: block; color: var(--primary); margin-bottom: 2px; }
+  .agenda-content span { font-size: 13px; color: var(--muted); }
+
+  /* Three types big cards */
+  .three-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 22px;
+  }
+
+  .type-card {
+    padding: 26px 20px;
+    border-radius: 12px;
+    color: white;
+    text-align: center;
+  }
+
+  .type-card.func { background: linear-gradient(135deg, #2F3C7E, #1E2761); }
+  .type-card.nofunc { background: linear-gradient(135deg, #028090, #065A82); }
+  .type-card.dom { background: linear-gradient(135deg, #B85042, #8B3A2F); }
+
+  .type-card h3 {
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+  }
+
+  .type-card p { font-size: 18px; font-weight: 600; }
+
+  /* Characteristics */
+  .char-item {
+    display: flex;
+    gap: 14px;
+    padding: 12px;
+    background: #F7F9FE;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  .char-letter {
+    background: var(--primary);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .char-content strong { color: var(--primary); display: block; }
+  .char-content span { font-size: 13px; color: var(--muted); }
+
+  /* Template box */
+  .template-box {
+    background: var(--primary);
+    color: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 15px;
+    margin: 18px 0;
+    line-height: 1.6;
+  }
+
+  .template-box .label {
+    display: block;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  /* Requirement examples */
+  .req-example {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 12px;
+    padding: 12px;
+    background: #FAFBFE;
+    border-left: 3px solid var(--primary);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .req-id {
+    background: var(--primary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    height: fit-content;
+  }
+
+  /* Tables */
+  table.req-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13.5px;
+  }
+
+  table.req-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  table.req-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  table.req-table tr:nth-child(even) td { background: #FAFBFE; }
+
+  /* Comparison no/si */
+  .comparison-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .col-bad {
+    background: #FDF2F2;
+    border: 1px solid #F5C2C2;
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .col-good {
+    background: #F0F9F4;
+    border: 1px solid #C2E6CF;
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .col-bad h4, .col-good h4 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  .col-bad h4 { color: var(--error); }
+  .col-good h4 { color: var(--success); }
+
+  .col-bad p, .col-good p {
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.08);
+  }
+
+  .col-bad p:last-child, .col-good p:last-child { border: none; }
+
+  /* Sector cards */
+  .sector-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .sector-card h4 {
+    color: var(--primary);
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .sector-card p { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+  /* Buttons / navigation */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+    gap: 12px;
+  }
+
+  .btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 39, 97, 0.25);
+  }
+
+  .btn:disabled {
+    background: #C5C9D4;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .btn-accent { background: var(--accent); }
+  .btn-accent:hover:not(:disabled) { background: #E04A50; }
+
+  .btn-ghost {
+    background: white;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+  }
+
+  .btn-ghost:hover:not(:disabled) { background: var(--secondary); }
+
+  .slide-counter {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Quiz styles */
+  .quiz-intro {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .quiz-intro .icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+
+  .quiz-intro h2 {
+    font-family: Georgia, serif;
+    font-size: 30px;
+    color: var(--primary);
+    margin-bottom: 14px;
+  }
+
+  .quiz-intro p {
+    color: var(--muted);
+    max-width: 580px;
+    margin: 0 auto 20px;
+    font-size: 15px;
+  }
+
+  .quiz-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 700px;
+    margin: 30px auto;
+  }
+
+  .quiz-feature {
+    background: #F7F9FE;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .quiz-feature .feat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .quiz-feature .feat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .quiz-question {
+    margin-bottom: 24px;
+  }
+
+  .quiz-question .q-number {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .quiz-question .q-text {
+    font-size: 17px;
+    color: var(--primary);
+    font-weight: 600;
+    margin: 8px 0 18px;
+    line-height: 1.4;
+  }
+
+  .quiz-question .q-context {
+    background: #F7F9FE;
+    border-left: 3px solid var(--primary-light);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .quiz-option {
+    background: white;
+    border: 1.5px solid var(--border);
+    padding: 14px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14.5px;
+    text-align: left;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .quiz-option:hover {
+    border-color: var(--primary);
+    background: #F7F9FE;
+  }
+
+  .quiz-option.selected {
+    border-color: var(--primary);
+    background: var(--secondary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .quiz-option.correct {
+    border-color: var(--success);
+    background: #E8F5EE;
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  .quiz-option.incorrect {
+    border-color: var(--error);
+    background: #FDECEA;
+    color: var(--error);
+  }
+
+  .option-letter {
+    background: var(--secondary);
+    color: var(--primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .quiz-option.selected .option-letter { background: var(--primary); color: white; }
+  .quiz-option.correct .option-letter { background: var(--success); color: white; }
+  .quiz-option.incorrect .option-letter { background: var(--error); color: white; }
+
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.right { background: #E8F5EE; color: var(--success); border-left: 4px solid var(--success); }
+  .feedback.wrong { background: #FDECEA; color: var(--error); border-left: 4px solid var(--error); }
+
+  .feedback strong { display: block; margin-bottom: 4px; }
+
+  /* Results */
+  .results-screen {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .score-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(var(--gold) 0%, var(--gold) var(--score-pct), #E1E5EE var(--score-pct), #E1E5EE 100%);
+    position: relative;
+  }
+
+  .score-inner {
+    width: 150px;
+    height: 150px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-number {
+    font-size: 50px;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 10px 0 20px;
+  }
+
+  .grade-excellent { background: #D4EDDA; color: #155724; }
+  .grade-good { background: #FFF3CD; color: #856404; }
+  .grade-fail { background: #F8D7DA; color: #721C24; }
+
+  .results-summary {
+    background: #F7F9FE;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 14px;
+  }
+
+  .summary-row:last-child { border: none; }
+  .summary-row span:first-child { color: var(--muted); }
+  .summary-row span:last-child { font-weight: 700; color: var(--primary); }
+
+  .review-list {
+    text-align: left;
+    margin: 20px auto;
+    max-width: 700px;
+  }
+
+  .review-item {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 4px solid;
+    font-size: 13.5px;
+  }
+
+  .review-item.right { background: #F0F9F4; border-color: var(--success); }
+  .review-item.wrong { background: #FDF2F2; border-color: var(--error); }
+  .review-item .q { font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+  .review-item .ans { color: var(--muted); font-size: 12.5px; }
+  .review-item .ans strong { color: var(--text); }
+
+  /* Closing slide */
+  .key-ideas { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .key-idea {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 14px;
+    background: #F7F9FE;
+    padding: 14px 16px;
+    border-radius: 8px;
+    align-items: center;
+  }
+  .key-idea .num {
+    background: var(--accent);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .key-idea p { margin: 0; font-size: 14px; }
+
+  /* Sidebar / TOC for desktop */
+  .toc-toggle {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .toc-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(30, 39, 97, 0.6);
+    z-index: 100;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .toc-overlay.open { display: flex; }
+
+  .toc-panel {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .toc-panel h3 {
+    color: var(--primary);
+    margin-bottom: 14px;
+    font-family: Georgia, serif;
+  }
+
+  .toc-list { list-style: none; }
+
+  .toc-list li {
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: var(--text);
+    transition: background 0.2s;
+  }
+
+  .toc-list li:hover { background: var(--secondary); }
+  .toc-list li.active { background: var(--primary); color: white; font-weight: 600; }
+  .toc-list li.quiz-item { border-top: 2px solid var(--border); padding-top: 14px; margin-top: 8px; color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .slide-card { padding: 24px 22px; min-height: 400px; }
+    .slide-title { font-size: 24px; }
+    .grid-2, .grid-3, .comparison-cols, .three-types, .quiz-features, .grid-2-uneven {
+      grid-template-columns: 1fr;
+    }
+    header.app-header { flex-direction: column; gap: 10px; }
+    .progress-track { width: 140px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div>
+      <h1>Requerimientos Funcionales, No Funcionales y de Dominio</h1>
+      <div class="subtitle">Ingeniería de Requerimientos · UAEMéx</div>
+    </div>
+    <div class="progress-wrap">
+      <button class="toc-toggle" id="tocBtn">☰ Índice</button>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0%</div>
+    </div>
+  </header>
+
+  <div class="slide-card" id="slideCard"></div>
+
+  <div class="nav-bar">
+    <button class="btn btn-ghost" id="prevBtn">← Anterior</button>
+    <div class="slide-counter" id="slideCounter">1 / 23</div>
+    <button class="btn" id="nextBtn">Siguiente →</button>
+  </div>
+</div>
+
+<div class="toc-overlay" id="tocOverlay">
+  <div class="toc-panel">
+    <h3>Índice de la sesión</h3>
+    <ul class="toc-list" id="tocList"></ul>
+  </div>
+</div>
+
+<script>
+// ============ CONTENIDO DE DIAPOSITIVAS ============
+const slides = [
+  {
+    title: "Requerimientos Funcionales, No Funcionales y de Dominio",
+    eyebrow: "PORTADA",
+    html: `
+      <p style="font-size:17px; color:var(--muted); margin-bottom:24px;">
+        Conceptos esenciales y ejemplos prácticos para identificar, clasificar y especificar requerimientos en proyectos de software.
+      </p>
+      <div class="three-types">
+        <div class="type-card func">
+          <h3>FUNCIONALES</h3>
+          <p>Qué hace el sistema</p>
+        </div>
+        <div class="type-card nofunc">
+          <h3>NO FUNCIONALES</h3>
+          <p>Cómo lo hace</p>
+        </div>
+        <div class="type-card dom">
+          <h3>DE DOMINIO</h3>
+          <p>Qué reglas aplican</p>
+        </div>
+      </div>
+      <p style="margin-top:30px; color:var(--muted); font-size:14px; text-align:right;">
+        <strong style="color:var(--primary);">M. en A.E.G. Beatriz Orozco Garduño</strong><br>
+        Facultad de Ingeniería · UAEMéx
+      </p>
+    `
+  },
+  {
+    eyebrow: "RUTA DE LA SESIÓN",
+    title: "Agenda de la clase",
+    subtitle: "120 minutos · 6 momentos",
+    html: `
+      <div class="agenda-item"><div class="agenda-num">1</div><div class="agenda-time">10 min</div><div class="agenda-content"><strong>Encuadre</strong><span>Objetivos, contexto y por qué importa la ingeniería de requerimientos.</span></div></div>
+      <div class="agenda-item"><div class="agenda-num">2</div><div class="agenda-time">20 min</div><div class="agenda-content"><strong>Conceptos base</strong><span>Qué es un requerimiento, fuentes y características de calidad.</span></div></div>
+      <div class="agenda-item"><div class="agenda-num">3</div><div class="agenda-time">25 min</div><div class="agenda-content"><strong>Funcionales</strong><span>Definición, ejemplos y técnica de redacción con casos de uso.</span></div></div>
+      <div class="agenda-item"><div class="agenda-num">4</div><div class="agenda-time">25 min</div><div class="agenda-content"><strong>No funcionales</strong><span>Atributos de calidad, métricas y ejemplos por categoría.</span></div></div>
+      <div class="agenda-item"><div class="agenda-num">5</div><div class="agenda-time">20 min</div><div class="agenda-content"><strong>De dominio</strong><span>Reglas del negocio, restricciones del sector y ejemplos.</span></div></div>
+      <div class="agenda-item"><div class="agenda-num">6</div><div class="agenda-time">20 min</div><div class="agenda-content"><strong>Práctica + cierre</strong><span>Ejercicio guiado, dudas y tarea integradora.</span></div></div>
+    `
+  },
+  {
+    eyebrow: "OBJETIVOS DE APRENDIZAJE",
+    title: "¿Qué lograrás al terminar la sesión?",
+    html: `
+      <div class="grid-2">
+        <div class="info-card"><h4>Identificar</h4><p>los tres tipos de requerimientos en una situación real de un proyecto de software.</p></div>
+        <div class="info-card"><h4>Clasificar</h4><p>requerimientos funcionales, no funcionales y de dominio aplicando criterios claros.</p></div>
+        <div class="info-card"><h4>Redactar</h4><p>requerimientos con plantillas verificables, medibles y trazables.</p></div>
+        <div class="info-card"><h4>Reconocer</h4><p>errores frecuentes y ambigüedades al especificar requerimientos.</p></div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "CONCEPTOS BASE",
+    title: "¿Qué es un requerimiento?",
+    html: `
+      <p style="font-size:16px; margin-bottom:20px;">
+        Un requerimiento es una <strong>condición o capacidad</strong> que un sistema debe cumplir para satisfacer una necesidad de los usuarios o un contrato, estándar o documento formal.
+      </p>
+      <div class="grid-3">
+        <div class="info-card"><h4>Describe el QUÉ</h4><p>No el cómo. Se enfoca en lo que el sistema debe lograr, no en la tecnología.</p></div>
+        <div class="info-card"><h4>Tiene una fuente</h4><p>Surge de usuarios, clientes, normatividad, expertos del dominio o del propio sistema.</p></div>
+        <div class="info-card"><h4>Es verificable</h4><p>Debe poder probarse o medirse para saber si se cumple o no.</p></div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "CONCEPTOS BASE",
+    title: "¿De dónde provienen los requerimientos?",
+    html: `
+      <div class="grid-3">
+        <div class="info-card"><h4>Stakeholders</h4><p>Usuarios finales, clientes, patrocinadores, operadores y personal técnico.</p></div>
+        <div class="info-card"><h4>Documentación</h4><p>Manuales, contratos, RFPs, normas internas y sistemas heredados.</p></div>
+        <div class="info-card"><h4>Normativas</h4><p>Leyes, regulaciones, estándares (ISO, IEEE) y políticas institucionales.</p></div>
+        <div class="info-card"><h4>Dominio del problema</h4><p>Reglas, conceptos y restricciones propias del área (banca, salud, educación).</p></div>
+        <div class="info-card"><h4>El propio sistema</h4><p>Plataformas, infraestructura, integraciones y restricciones técnicas existentes.</p></div>
+        <div class="info-card"><h4>Innovación</h4><p>Visión estratégica, benchmarking y oportunidades del equipo de desarrollo.</p></div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "CONCEPTOS BASE",
+    title: "Características de un buen requerimiento",
+    html: `
+      <div class="grid-2">
+        <div class="char-item"><div class="char-letter">C</div><div class="char-content"><strong>Claro</strong><span>Una sola interpretación posible, sin ambigüedad.</span></div></div>
+        <div class="char-item"><div class="char-letter">C</div><div class="char-content"><strong>Completo</strong><span>Contiene toda la información necesaria para implementarse.</span></div></div>
+        <div class="char-item"><div class="char-letter">C</div><div class="char-content"><strong>Consistente</strong><span>No contradice otros requerimientos ni reglas del dominio.</span></div></div>
+        <div class="char-item"><div class="char-letter">V</div><div class="char-content"><strong>Verificable</strong><span>Puede probarse mediante una prueba o métrica concreta.</span></div></div>
+        <div class="char-item"><div class="char-letter">F</div><div class="char-content"><strong>Factible</strong><span>Realizable dentro de las restricciones técnicas y de tiempo.</span></div></div>
+        <div class="char-item"><div class="char-letter">T</div><div class="char-content"><strong>Trazable</strong><span>Identificable y rastreable a lo largo del ciclo de vida.</span></div></div>
+      </div>
+      <p style="margin-top:18px; padding:12px 16px; background:#FFF8E1; border-left:4px solid var(--accent); border-radius:6px; font-size:14px;">
+        ⚠️ Si un requerimiento no cumple estos atributos, debe reescribirse antes de pasar a diseño.
+      </p>
+    `
+  },
+  {
+    eyebrow: "PARTE CENTRAL",
+    title: "Los tres tipos de requerimientos",
+    html: `
+      <p style="font-size:16px; color:var(--muted); margin-bottom:8px;">
+        Toda especificación profesional clasifica sus requerimientos en estas tres categorías.
+      </p>
+      <div class="three-types">
+        <div class="type-card func">
+          <h3>FUNCIONALES</h3>
+          <p>Qué hace el sistema</p>
+        </div>
+        <div class="type-card nofunc">
+          <h3>NO FUNCIONALES</h3>
+          <p>Cómo lo hace</p>
+        </div>
+        <div class="type-card dom">
+          <h3>DE DOMINIO</h3>
+          <p>Qué reglas aplican</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "FUNCIONALES",
+    title: "Requerimientos Funcionales",
+    html: `
+      <p style="font-size:15.5px; margin-bottom:18px;">
+        Definen <strong>qué debe hacer el sistema</strong>: las funciones, servicios, cálculos y comportamientos visibles que ofrece a sus usuarios o a otros sistemas.
+      </p>
+      <div class="template-box">
+        <span class="label">PREGUNTA CLAVE</span>
+        ¿Qué hace el sistema cuando el usuario hace X?
+      </div>
+      <div class="grid-2">
+        <div class="info-card"><h4>Lo que típicamente describen</h4>
+          <p>• Entradas y salidas del sistema<br>
+          • Operaciones de los usuarios<br>
+          • Reglas de cálculo y procesamiento<br>
+          • Comportamiento ante eventos y excepciones</p>
+        </div>
+        <div class="info-card"><h4>Ejemplos genéricos</h4>
+          <p>• Registrar un nuevo usuario<br>
+          • Generar reporte mensual en PDF<br>
+          • Enviar correo de confirmación<br>
+          • Calcular promedio ponderado<br>
+          • Restablecer contraseña vía correo</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "FUNCIONALES",
+    title: "¿Cómo se redacta un requerimiento funcional?",
+    html: `
+      <div class="template-box">
+        <span class="label">PLANTILLA</span>
+        El sistema deberá <em style="color:var(--gold)">[acción/verbo en infinitivo]</em> el <em style="color:var(--gold)">[objeto/dato]</em> cuando <em style="color:var(--gold)">[condición/evento]</em>.
+      </div>
+      <h4 style="margin:18px 0 12px; color:var(--primary);">Ejemplos en formato profesional</h4>
+      <div class="req-example"><div class="req-id">RF-01</div><div>El sistema deberá <strong>registrar un nuevo cliente</strong> cuando el usuario complete el formulario y oprima el botón 'Guardar'.</div></div>
+      <div class="req-example"><div class="req-id">RF-02</div><div>El sistema deberá <strong>calcular el total de la compra</strong> sumando subtotal, IVA e impuestos cuando el cliente llegue al paso de pago.</div></div>
+      <div class="req-example"><div class="req-id">RF-03</div><div>El sistema deberá <strong>enviar una notificación al docente</strong> cuando un alumno entregue su tarea fuera de la fecha límite.</div></div>
+    `
+  },
+  {
+    eyebrow: "FUNCIONALES",
+    title: "Ejemplo aplicado: Control Escolar",
+    subtitle: "Módulo de inscripción de alumnos a unidades de aprendizaje",
+    html: `
+      <table class="req-table">
+        <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><strong>RF-01</strong></td><td>Iniciar sesión</td><td>Autenticar al alumno mediante número de cuenta y contraseña al ingresar al portal.</td></tr>
+          <tr><td><strong>RF-02</strong></td><td>Consultar oferta</td><td>Mostrar las unidades de aprendizaje disponibles para el periodo y carrera del alumno.</td></tr>
+          <tr><td><strong>RF-03</strong></td><td>Registrar inscripción</td><td>Registrar la inscripción del alumno a una UA cuando seleccione un grupo con cupo disponible.</td></tr>
+          <tr><td><strong>RF-04</strong></td><td>Validar prerrequisitos</td><td>Rechazar la inscripción si el alumno no tiene acreditadas las UA prerrequisito.</td></tr>
+          <tr><td><strong>RF-05</strong></td><td>Generar comprobante</td><td>Generar un comprobante PDF con el horario al confirmar la inscripción.</td></tr>
+        </tbody>
+      </table>
+    `
+  },
+  {
+    eyebrow: "NO FUNCIONALES",
+    title: "Requerimientos No Funcionales",
+    html: `
+      <p style="font-size:15.5px; margin-bottom:18px;">
+        Definen <strong>cómo debe comportarse el sistema</strong>: atributos de calidad como rendimiento, seguridad, usabilidad, disponibilidad y mantenibilidad.
+      </p>
+      <div class="template-box">
+        <span class="label">PREGUNTA CLAVE</span>
+        ¿Qué tan bien lo debe hacer el sistema?
+      </div>
+      <div class="grid-2">
+        <div class="info-card"><h4>Características importantes</h4>
+          <p>• Aplican al sistema en su conjunto<br>
+          • Se expresan con métricas o umbrales<br>
+          • Su incumplimiento puede invalidar el producto</p>
+        </div>
+        <div class="info-card" style="border-color:var(--accent); border-left-color:var(--accent);">
+          <h4 style="color:var(--accent);">⚠️ Cuidado</h4>
+          <p>No basta decir "rápido" o "seguro". Hay que precisar:<br>
+          • ¿Rápido cuánto? (s, ms)<br>
+          • ¿Seguro contra qué? (autenticación, cifrado)<br>
+          • ¿Bajo qué condiciones? (carga, usuarios)</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "NO FUNCIONALES",
+    title: "Categorías principales",
+    subtitle: "Atributos de calidad inspirados en ISO/IEC 25010 y Sommerville",
+    html: `
+      <div class="grid-2">
+        <div class="info-card"><h4>Rendimiento</h4><p>Tiempos de respuesta, throughput, capacidad bajo carga.</p></div>
+        <div class="info-card"><h4>Seguridad</h4><p>Autenticación, autorización, cifrado, integridad.</p></div>
+        <div class="info-card"><h4>Usabilidad</h4><p>Facilidad de uso, accesibilidad y curva de aprendizaje.</p></div>
+        <div class="info-card"><h4>Confiabilidad</h4><p>Disponibilidad, tolerancia a fallos, recuperación.</p></div>
+        <div class="info-card"><h4>Mantenibilidad</h4><p>Facilidad para modificar, corregir y evolucionar el código.</p></div>
+        <div class="info-card"><h4>Portabilidad</h4><p>Capacidad de operar en distintos entornos o plataformas.</p></div>
+        <div class="info-card"><h4>Escalabilidad</h4><p>Crecer en usuarios, datos o transacciones sin degradar.</p></div>
+        <div class="info-card"><h4>Compatibilidad</h4><p>Coexistencia e interoperabilidad con otros sistemas.</p></div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "NO FUNCIONALES",
+    title: "Ejemplos por categoría (con métrica)",
+    html: `
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">RND</div><div><strong>Rendimiento:</strong> El sistema deberá responder a una consulta de calificaciones en menos de <strong>2 segundos</strong> con hasta <strong>500 usuarios concurrentes</strong>.</div></div>
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">DSP</div><div><strong>Disponibilidad:</strong> El portal estará disponible al menos el <strong>99.5%</strong> del tiempo durante el periodo de inscripciones.</div></div>
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">SEG</div><div><strong>Seguridad:</strong> Las contraseñas deberán almacenarse cifradas con algoritmo <strong>bcrypt</strong> y factor de costo mínimo de 12.</div></div>
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">USA</div><div><strong>Usabilidad:</strong> Un usuario nuevo deberá completar el registro de calificaciones sin entrenamiento previo en menos de <strong>5 minutos</strong>.</div></div>
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">CMP</div><div><strong>Compatibilidad:</strong> La aplicación deberá funcionar en las dos versiones más recientes de <strong>Chrome, Firefox y Edge</strong>.</div></div>
+      <div class="req-example" style="border-color:var(--nofunc);"><div class="req-id" style="background:var(--nofunc);">MNT</div><div><strong>Mantenibilidad:</strong> El código deberá tener cobertura mínima del <strong>80%</strong> en pruebas unitarias antes de cada despliegue.</div></div>
+    `
+  },
+  {
+    eyebrow: "NO FUNCIONALES",
+    title: "Cómo NO redactar · Cómo SÍ redactar",
+    html: `
+      <div class="comparison-cols">
+        <div class="col-bad">
+          <h4>✖ Ambiguo / no verificable</h4>
+          <p>"El sistema debe ser rápido."</p>
+          <p>"La interfaz debe ser amigable."</p>
+          <p>"Debe ser muy seguro."</p>
+          <p>"Debe estar disponible casi siempre."</p>
+        </div>
+        <div class="col-good">
+          <h4>✔ Específico y medible</h4>
+          <p>Responder en ≤ 2 s al 95% de las consultas con 500 usuarios concurrentes.</p>
+          <p>Un usuario nuevo deberá completar el registro en ≤ 5 minutos sin asistencia.</p>
+          <p>Toda comunicación deberá usar TLS 1.2 o superior.</p>
+          <p>Disponibilidad mensual ≥ 99.5% en horario laboral.</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "DE DOMINIO",
+    title: "Requerimientos de Dominio",
+    html: `
+      <p style="font-size:15.5px; margin-bottom:18px;">
+        Surgen del <strong>área de aplicación</strong> del sistema (banca, salud, educación, manufactura). Pueden ser nuevos requerimientos funcionales, restricciones a otros, o cálculos específicos del negocio.
+      </p>
+      <div class="template-box">
+        <span class="label">PREGUNTA CLAVE</span>
+        ¿Qué reglas obliga el negocio o el sector a respetar?
+      </div>
+      <div class="grid-2">
+        <div class="info-card"><h4>Tres formas en que aparecen</h4>
+          <p>• Como nuevas funciones específicas del dominio<br>
+          • Como restricciones sobre requerimientos existentes<br>
+          • Como cálculos o fórmulas particulares del sector</p>
+        </div>
+        <div class="info-card" style="border-color:var(--dom); border-left-color:var(--dom);">
+          <h4 style="color:var(--dom);">⚠️ Riesgo típico</h4>
+          <p>Los expertos del dominio tienden a omitirlos por "obvios". Resultado: sistemas que funcionan pero violan reglas legales, cálculos incorrectos, re-trabajo costoso.</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "DE DOMINIO",
+    title: "Ejemplos por sector",
+    html: `
+      <div class="sector-card">
+        <h4>🎓 Educación (UAEMéx)</h4>
+        <p>• Un alumno solo puede inscribir una UA si tiene aprobada la UA prerrequisito en el plan de estudios vigente.</p>
+        <p>• El promedio se calcula con escala de 0 a 10, redondeado a un decimal según el reglamento institucional.</p>
+      </div>
+      <div class="sector-card">
+        <h4>🏦 Banca</h4>
+        <p>• Toda operación mayor a $7,500 USD debe reportarse a la unidad de inteligencia financiera (PLD/AML).</p>
+        <p>• El cálculo de intereses moratorios sigue la fórmula del CAT establecida por la CNBV.</p>
+      </div>
+      <div class="sector-card">
+        <h4>⚕️ Salud</h4>
+        <p>• El expediente clínico debe conservarse al menos 5 años conforme a la NOM-004-SSA3-2012.</p>
+        <p>• Los datos sensibles deben anonimizarse antes de exportarse para fines estadísticos.</p>
+      </div>
+    `
+  },
+  {
+    eyebrow: "COMPARACIÓN",
+    title: "Diferencias entre los tres tipos",
+    html: `
+      <table class="req-table">
+        <thead><tr><th>Aspecto</th><th>Funcionales</th><th>No Funcionales</th><th>De Dominio</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pregunta</strong></td><td>¿Qué hace?</td><td>¿Qué tan bien?</td><td>¿Qué reglas aplican?</td></tr>
+          <tr><td><strong>Origen</strong></td><td>Usuarios y casos de uso</td><td>Atributos de calidad</td><td>Conocimiento del sector</td></tr>
+          <tr><td><strong>Foco</strong></td><td>Comportamiento y servicios</td><td>Calidad y restricciones</td><td>Negocio y normativas</td></tr>
+          <tr><td><strong>Cómo se mide</strong></td><td>Casos de prueba funcionales</td><td>Métricas y umbrales</td><td>Auditoría y revisión legal</td></tr>
+        </tbody>
+      </table>
+    `
+  },
+  {
+    eyebrow: "CASO INTEGRADO",
+    title: "Plataforma de e-commerce: los tres tipos juntos",
+    html: `
+      <div class="sector-card" style="border-left-color:var(--func);">
+        <h4 style="color:var(--func);">⚙️ FUNCIONAL · Procesar el pago</h4>
+        <p>• Permitir seleccionar tarjeta de crédito, débito o transferencia.</p>
+        <p>• Mostrar resumen del pedido antes de confirmar la compra.</p>
+        <p>• Enviar correo con número de pedido al confirmarse el pago.</p>
+      </div>
+      <div class="sector-card" style="border-left-color:var(--nofunc);">
+        <h4 style="color:var(--nofunc);">📊 NO FUNCIONAL · Cómo debe comportarse</h4>
+        <p>• Procesar el pago en ≤ 4 segundos en el 95% de los casos.</p>
+        <p>• Cifrar todos los datos de tarjeta con TLS 1.3 punto a punto.</p>
+        <p>• Soportar al menos 1,000 transacciones simultáneas en hora pico.</p>
+      </div>
+      <div class="sector-card" style="border-left-color:var(--dom);">
+        <h4 style="color:var(--dom);">📋 DE DOMINIO · Reglas del sector</h4>
+        <p>• Cumplir con el estándar PCI DSS para almacenar y procesar tarjetas.</p>
+        <p>• Aplicar la tasa de IVA vigente según el país de envío del comprador.</p>
+        <p>• Emitir factura electrónica con CFDI 4.0 para clientes en México.</p>
+      </div>
+    `
+  },
+  {
+    eyebrow: "BUENAS PRÁCTICAS",
+    title: "Errores frecuentes al especificar",
+    html: `
+      <div class="grid-2">
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">Confundir el qué con el cómo</h4><p>Mezclar requerimiento con diseño. Ej.: "usar React" no es un requerimiento.</p></div>
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">Ambigüedad</h4><p>Términos como "rápido", "fácil" o "seguro" sin métrica.</p></div>
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">Mezclar varios requerimientos</h4><p>Un párrafo con tres comportamientos. Cada requerimiento debe ser atómico.</p></div>
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">Olvidar el dominio</h4><p>Asumir que las reglas del negocio son obvias y dejarlas fuera del documento.</p></div>
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">Sin trazabilidad</h4><p>No identificar fuente, prioridad ni a quién impacta el requerimiento.</p></div>
+        <div class="info-card" style="border-left-color:var(--error);"><h4 style="color:var(--error);">No verificable</h4><p>Si no se puede probar, no se puede aceptar. Falta criterio de aceptación.</p></div>
+      </div>
+    `
+  },
+  {
+    eyebrow: "CIERRE",
+    title: "5 ideas que debes recordar",
+    html: `
+      <div class="key-ideas">
+        <div class="key-idea"><div class="num">01</div><p><strong>Funcionales</strong> = qué hace · <strong>No funcionales</strong> = qué tan bien · <strong>De dominio</strong> = qué reglas aplican.</p></div>
+        <div class="key-idea"><div class="num">02</div><p>Todo requerimiento debe ser <strong>claro, completo, consistente, verificable, factible y trazable</strong>.</p></div>
+        <div class="key-idea"><div class="num">03</div><p>Los requerimientos <strong>no funcionales se redactan con métricas</strong> y umbrales medibles.</p></div>
+        <div class="key-idea"><div class="num">04</div><p>Los requerimientos de <strong>dominio suelen omitirse</strong>: pregunta siempre por reglas del sector.</p></div>
+        <div class="key-idea"><div class="num">05</div><p>Un buen requerimiento se escribe en <strong>infinitivo</strong> y describe el qué, no el cómo.</p></div>
+      </div>
+    `
+  },
+  // Quiz intro slide
+  {
+    eyebrow: "EVALUACIÓN",
+    title: "¡A evaluar lo aprendido!",
+    isQuizIntro: true,
+    html: `
+      <div class="quiz-intro">
+        <div class="icon">🎯</div>
+        <h2>Cuestionario de la sesión</h2>
+        <p>Pon a prueba tu comprensión sobre los tres tipos de requerimientos. Responde cada pregunta y al final obtendrás tu calificación.</p>
+        <div class="quiz-features">
+          <div class="quiz-feature"><div class="feat-num">10</div><div class="feat-label">PREGUNTAS</div></div>
+          <div class="quiz-feature"><div class="feat-num">∞</div><div class="feat-label">SIN LÍMITE DE TIEMPO</div></div>
+          <div class="quiz-feature"><div class="feat-num">6.0</div><div class="feat-label">PARA APROBAR</div></div>
+        </div>
+        <p style="font-size:13px; color:var(--muted);">Recibirás retroalimentación inmediata al responder cada pregunta.</p>
+      </div>
+    `
+  }
+];
+
+// ============ PREGUNTAS DEL CUESTIONARIO ============
+const questions = [
+  {
+    text: "¿Cuál es la pregunta clave que responde un requerimiento funcional?",
+    options: [
+      "¿Qué tan bien lo hace el sistema?",
+      "¿Qué hace el sistema cuando el usuario hace X?",
+      "¿Qué reglas del negocio aplican?",
+      "¿Con qué tecnología se construirá?"
+    ],
+    correct: 1,
+    feedback: "Los requerimientos funcionales describen QUÉ debe hacer el sistema en respuesta a eventos o acciones del usuario."
+  },
+  {
+    text: "Clasifica este requerimiento: \"El sistema deberá responder a una consulta en menos de 2 segundos con hasta 500 usuarios concurrentes\".",
+    options: [
+      "Funcional (RF)",
+      "No funcional (RNF)",
+      "De dominio (RD)",
+      "Restricción técnica"
+    ],
+    correct: 1,
+    feedback: "Es un requerimiento no funcional de rendimiento porque define CÓMO debe comportarse el sistema con una métrica medible (2 s, 500 usuarios)."
+  },
+  {
+    text: "Clasifica: \"Un alumno solo puede inscribir una UA si tiene aprobada la UA prerrequisito según el plan vigente\".",
+    options: [
+      "Funcional (RF)",
+      "No funcional (RNF)",
+      "De dominio (RD)",
+      "Caso de uso"
+    ],
+    correct: 2,
+    feedback: "Es de dominio porque surge de una regla específica del sector educativo (reglamento UAEMéx), no de una preferencia del usuario."
+  },
+  {
+    text: "¿Cuál de estas NO es una característica de un buen requerimiento?",
+    options: [
+      "Verificable",
+      "Trazable",
+      "Ambiguo",
+      "Consistente"
+    ],
+    correct: 2,
+    feedback: "Ambiguo es lo opuesto a lo que se busca. Un buen requerimiento debe ser claro, completo, consistente, verificable, factible y trazable."
+  },
+  {
+    text: "Identifica la versión CORRECTAMENTE redactada de un requerimiento no funcional:",
+    context: "Las dos versiones se refieren al mismo atributo de calidad.",
+    options: [
+      "El sistema debe ser rápido y eficiente.",
+      "La interfaz debe ser amigable y fácil de usar.",
+      "El sistema deberá responder en ≤ 2 segundos al 95% de las consultas con 500 usuarios concurrentes.",
+      "Debe estar disponible casi siempre."
+    ],
+    correct: 2,
+    feedback: "La opción correcta incluye métricas precisas (≤ 2 s, 95% de consultas, 500 usuarios), lo que la hace verificable. Las demás son ambiguas."
+  },
+  {
+    text: "Clasifica: \"El sistema deberá generar un comprobante PDF con el horario al confirmar la inscripción\".",
+    options: [
+      "Funcional (RF)",
+      "No funcional (RNF)",
+      "De dominio (RD)",
+      "Restricción legal"
+    ],
+    correct: 0,
+    feedback: "Es funcional: describe QUÉ hace el sistema (generar comprobante) y bajo qué condición (al confirmar inscripción)."
+  },
+  {
+    text: "Clasifica: \"Toda operación mayor a $7,500 USD debe reportarse a la unidad de inteligencia financiera (PLD/AML)\".",
+    options: [
+      "Funcional (RF)",
+      "No funcional (RNF)",
+      "De dominio (RD)",
+      "Requerimiento de usabilidad"
+    ],
+    correct: 2,
+    feedback: "Es de dominio: surge de una regulación específica del sector bancario (PLD/AML) que el sistema está obligado a respetar."
+  },
+  {
+    text: "¿Cuál es la plantilla recomendada para redactar un requerimiento funcional?",
+    options: [
+      "El usuario quiere [acción] para [beneficio].",
+      "El sistema deberá [acción en infinitivo] el [objeto] cuando [condición/evento].",
+      "Como [rol], necesito [funcionalidad] porque [razón].",
+      "Cuando [evento], entonces [resultado]."
+    ],
+    correct: 1,
+    feedback: "Esa es la plantilla profesional vista en clase: usa verbo en infinitivo, identifica el objeto y la condición de disparo."
+  },
+  {
+    text: "Clasifica: \"La app deberá funcionar sin conexión a internet y sincronizar al recuperarla\".",
+    options: [
+      "Funcional (RF)",
+      "No funcional (RNF)",
+      "De dominio (RD)",
+      "Es ambiguo, no se puede clasificar"
+    ],
+    correct: 1,
+    feedback: "Es no funcional: describe un atributo de calidad (disponibilidad/confiabilidad) que aplica al sistema en su conjunto, no a una función específica."
+  },
+  {
+    text: "¿Cuál es el RIESGO TÍPICO con los requerimientos de dominio?",
+    options: [
+      "Que sean demasiado técnicos y los stakeholders no los entiendan.",
+      "Que los expertos del dominio los omitan por considerarlos 'obvios', causando incumplimiento normativo.",
+      "Que sean imposibles de medir con métricas.",
+      "Que dupliquen los requerimientos funcionales."
+    ],
+    correct: 1,
+    feedback: "Exacto. Los expertos del dominio suelen darlos por sentados, lo que provoca sistemas que violan reglas legales o tienen cálculos incorrectos en producción."
+  }
+];
+
+// ============ ESTADO DE LA APLICACIÓN ============
+const state = {
+  currentSlide: 0,
+  inQuiz: false,
+  currentQuestion: 0,
+  answers: [],
+  quizFinished: false
+};
+
+const totalSlides = slides.length;
+const totalQuestions = questions.length;
+
+// Elementos del DOM
+const slideCard = document.getElementById('slideCard');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const slideCounter = document.getElementById('slideCounter');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const tocBtn = document.getElementById('tocBtn');
+const tocOverlay = document.getElementById('tocOverlay');
+const tocList = document.getElementById('tocList');
+
+// Renderizar índice
+function buildTOC() {
+  tocList.innerHTML = '';
+  slides.forEach((slide, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${i + 1}. ${slide.title}`;
+    li.dataset.index = i;
+    li.onclick = () => {
+      state.inQuiz = false;
+      state.quizFinished = false;
+      state.currentSlide = i;
+      tocOverlay.classList.remove('open');
+      render();
+    };
+    tocList.appendChild(li);
+  });
+  const quizLi = document.createElement('li');
+  quizLi.className = 'quiz-item';
+  quizLi.textContent = '🎯 Ir al cuestionario';
+  quizLi.onclick = () => {
+    state.currentSlide = slides.length - 1;
+    state.inQuiz = false;
+    state.quizFinished = false;
+    tocOverlay.classList.remove('open');
+    render();
+  };
+  tocList.appendChild(quizLi);
+}
+
+tocBtn.onclick = () => tocOverlay.classList.toggle('open');
+tocOverlay.onclick = (e) => { if (e.target === tocOverlay) tocOverlay.classList.remove('open'); };
+
+// Renderizar slide
+function renderSlide() {
+  const slide = slides[state.currentSlide];
+  let html = '';
+  if (slide.eyebrow) html += `<div class="slide-eyebrow">${slide.eyebrow}</div>`;
+  if (slide.title) html += `<h2 class="slide-title">${slide.title}</h2>`;
+  if (slide.subtitle) html += `<div class="slide-subtitle">${slide.subtitle}</div>`;
+  html += `<div class="slide-body">${slide.html}</div>`;
+  slideCard.innerHTML = html;
+
+  slideCounter.textContent = `${state.currentSlide + 1} / ${totalSlides}`;
+  const pct = ((state.currentSlide + 1) / totalSlides) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = Math.round(pct) + '%';
+
+  prevBtn.disabled = state.currentSlide === 0;
+
+  const isLastSlide = state.currentSlide === totalSlides - 1;
+  if (isLastSlide) {
+    nextBtn.textContent = '🎯 Comenzar cuestionario';
+    nextBtn.classList.add('btn-accent');
+  } else {
+    nextBtn.textContent = 'Siguiente →';
+    nextBtn.classList.remove('btn-accent');
+  }
+  nextBtn.disabled = false;
+
+  // Actualizar TOC activo
+  document.querySelectorAll('.toc-list li').forEach((li, i) => {
+    li.classList.toggle('active', i === state.currentSlide);
+  });
+}
+
+// Renderizar pregunta del quiz
+function renderQuestion() {
+  const q = questions[state.currentQuestion];
+  const selected = state.answers[state.currentQuestion];
+  const answered = selected !== undefined;
+
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'quiz-option';
+    const letter = String.fromCharCode(65 + i);
+    if (answered) {
+      if (i === q.correct) cls += ' correct';
+      else if (i === selected) cls += ' incorrect';
+    } else if (selected === i) {
+      cls += ' selected';
+    }
+    return `<button class="${cls}" data-idx="${i}" ${answered ? 'disabled' : ''}>
+      <span class="option-letter">${letter}</span>
+      <span>${opt}</span>
+    </button>`;
+  }).join('');
+
+  const feedbackHtml = answered ? `
+    <div class="feedback show ${selected === q.correct ? 'right' : 'wrong'}">
+      <strong>${selected === q.correct ? '✓ ¡Correcto!' : '✗ Incorrecto'}</strong>
+      ${q.feedback}
+    </div>
+  ` : '';
+
+  const contextHtml = q.context ? `<div class="q-context">${q.context}</div>` : '';
+
+  slideCard.innerHTML = `
+    <div class="slide-eyebrow">CUESTIONARIO · PREGUNTA ${state.currentQuestion + 1} DE ${totalQuestions}</div>
+    <div class="quiz-question">
+      <div class="q-number">PREGUNTA ${state.currentQuestion + 1}</div>
+      <div class="q-text">${q.text}</div>
+      ${contextHtml}
+      <div class="quiz-options">${optionsHtml}</div>
+      ${feedbackHtml}
+    </div>
+  `;
+
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.onclick = () => {
+      if (state.answers[state.currentQuestion] === undefined) {
+        state.answers[state.currentQuestion] = parseInt(btn.dataset.idx);
+        renderQuestion();
+      }
+    };
+  });
+
+  // Counter & buttons
+  slideCounter.textContent = `Pregunta ${state.currentQuestion + 1} / ${totalQuestions}`;
+  const pct = ((state.currentQuestion + 1) / totalQuestions) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = Math.round(pct) + '%';
+
+  prevBtn.disabled = state.currentQuestion === 0;
+
+  const isLast = state.currentQuestion === totalQuestions - 1;
+  if (isLast) {
+    nextBtn.textContent = '📊 Ver calificación';
+    nextBtn.classList.add('btn-accent');
+  } else {
+    nextBtn.textContent = 'Siguiente pregunta →';
+    nextBtn.classList.remove('btn-accent');
+  }
+  nextBtn.disabled = !answered;
+}
+
+// Pantalla de resultados
+function renderResults() {
+  const correctCount = state.answers.filter((a, i) => a === questions[i].correct).length;
+  const score10 = (correctCount / totalQuestions) * 10;
+  const pct = (correctCount / totalQuestions) * 100;
+  const passed = score10 >= 6.0;
+
+  let gradeBadge, gradeLabel, gradeClass;
+  if (score10 >= 9) { gradeBadge = 'Excelente'; gradeClass = 'grade-excellent'; gradeLabel = '🏆 ¡Dominio sobresaliente!'; }
+  else if (score10 >= 8) { gradeBadge = 'Muy bien'; gradeClass = 'grade-excellent'; gradeLabel = '👏 Buen dominio del tema'; }
+  else if (score10 >= 6) { gradeBadge = 'Aprobado'; gradeClass = 'grade-good'; gradeLabel = '✓ Has aprobado, revisa los errores'; }
+  else { gradeBadge = 'Reprobado'; gradeClass = 'grade-fail'; gradeLabel = '📚 Necesitas repasar el material'; }
+
+  const reviewHtml = questions.map((q, i) => {
+    const ans = state.answers[i];
+    const ok = ans === q.correct;
+    return `
+      <div class="review-item ${ok ? 'right' : 'wrong'}">
+        <div class="q">${ok ? '✓' : '✗'} P${i+1}. ${q.text}</div>
+        <div class="ans">
+          <strong>Tu respuesta:</strong> ${q.options[ans]}<br>
+          ${!ok ? `<strong>Correcta:</strong> ${q.options[q.correct]}` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  slideCard.innerHTML = `
+    <div class="results-screen">
+      <div class="slide-eyebrow">RESULTADOS</div>
+      <h2 class="slide-title">${gradeLabel}</h2>
+      <div class="score-circle" style="--score-pct: ${pct}%;">
+        <div class="score-inner">
+          <div class="score-number">${score10.toFixed(1)}</div>
+          <div class="score-label">DE 10.0</div>
+        </div>
+      </div>
+      <div class="grade-badge ${gradeClass}">${gradeBadge}</div>
+      <div class="results-summary">
+        <div class="summary-row"><span>Respuestas correctas</span><span>${correctCount} / ${totalQuestions}</span></div>
+        <div class="summary-row"><span>Porcentaje de aciertos</span><span>${pct.toFixed(0)}%</span></div>
+        <div class="summary-row"><span>Calificación (escala 0-10)</span><span>${score10.toFixed(1)}</span></div>
+        <div class="summary-row"><span>Estatus</span><span style="color:${passed ? 'var(--success)' : 'var(--error)'};">${passed ? 'APROBADO' : 'NO APROBADO'}</span></div>
+      </div>
+      <h3 style="color:var(--primary); margin:20px 0 10px; font-family:Georgia,serif;">Revisión de respuestas</h3>
+      <div class="review-list">${reviewHtml}</div>
+      <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="reviewBtn">📖 Repasar diapositivas</button>
+        <button class="btn btn-accent" id="retryBtn">🔄 Intentar de nuevo</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('reviewBtn').onclick = () => {
+    state.inQuiz = false;
+    state.quizFinished = false;
+    state.currentSlide = 0;
+    render();
+  };
+  document.getElementById('retryBtn').onclick = () => {
+    state.answers = [];
+    state.currentQuestion = 0;
+    state.quizFinished = false;
+    state.inQuiz = true;
+    render();
+  };
+
+  slideCounter.textContent = `Resultado final`;
+  progressFill.style.width = '100%';
+  progressLabel.textContent = '100%';
+  prevBtn.disabled = false;
+  nextBtn.disabled = true;
+  nextBtn.textContent = '✓ Finalizado';
+  nextBtn.classList.remove('btn-accent');
+}
+
+// Render principal
+function render() {
+  if (state.quizFinished) {
+    renderResults();
+  } else if (state.inQuiz) {
+    renderQuestion();
+  } else {
+    renderSlide();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Navegación
+prevBtn.onclick = () => {
+  if (state.quizFinished) {
+    state.quizFinished = false;
+    state.inQuiz = true;
+    state.currentQuestion = totalQuestions - 1;
+  } else if (state.inQuiz) {
+    if (state.currentQuestion > 0) {
+      state.currentQuestion--;
+    } else {
+      state.inQuiz = false;
+      state.currentSlide = totalSlides - 1;
+    }
+  } else if (state.currentSlide > 0) {
+    state.currentSlide--;
+  }
+  render();
+};
+
+nextBtn.onclick = () => {
+  if (state.inQuiz) {
+    if (state.answers[state.currentQuestion] === undefined) return;
+    if (state.currentQuestion < totalQuestions - 1) {
+      state.currentQuestion++;
+    } else {
+      state.quizFinished = true;
+    }
+  } else if (state.currentSlide < totalSlides - 1) {
+    state.currentSlide++;
+  } else {
+    // Pasar al quiz
+    state.inQuiz = true;
+    state.currentQuestion = 0;
+    state.answers = [];
+  }
+  render();
+};
+
+// Soporte de teclado
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' && !nextBtn.disabled) nextBtn.click();
+  if (e.key === 'ArrowLeft' && !prevBtn.disabled) prevBtn.click();
+});
+
+// Init
+buildTOC();
+render();
+</script>
+</body>
+</html>
