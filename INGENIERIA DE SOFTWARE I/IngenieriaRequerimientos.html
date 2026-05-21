@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingeniería de Requerimientos · Material Interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1d29;
+    --paper: #f5f1ea;
+    --paper-2: #ede7dc;
+    --accent: #d94f2e;        /* terracota */
+    --accent-2: #2d5f6b;      /* teal profundo */
+    --accent-3: #c9a961;      /* mostaza */
+    --green: #4a6b3a;
+    --muted: #6b6557;
+    --line: rgba(26, 29, 41, 0.15);
+    --shadow-soft: 0 2px 12px rgba(26, 29, 41, 0.06);
+    --shadow-med: 0 8px 30px rgba(26, 29, 41, 0.12);
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Manrope', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    overflow: hidden;
+  }
+
+  /* Textura de papel sutil */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(217, 79, 46, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(45, 95, 107, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .app {
+    position: relative;
+    z-index: 2;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* HEADER */
+  header {
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(245, 241, 234, 0.85);
+    backdrop-filter: blur(10px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    font-style: italic;
+    transform: rotate(-4deg);
+  }
+
+  .brand-text {
+    line-height: 1.1;
+  }
+
+  .brand-text .t1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .brand-text .t2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .progress-track {
+    flex: 1;
+    max-width: 320px;
+    margin: 0 40px;
+    height: 4px;
+    background: var(--paper-2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-3));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .slide-counter {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .slide-counter strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* MAIN STAGE */
+  main {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 30px 40px;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 30px 40px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .slide.prev {
+    transform: translateX(-60px);
+  }
+
+  /* Scrollbar minimalista */
+  .slide::-webkit-scrollbar { width: 6px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .slide::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .slide-inner {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 20px 0;
+  }
+
+  /* TIPOGRAFÍA EN SLIDES */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .slide h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+
+  .slide h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 300;
+  }
+
+  .slide h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    line-height: 1.15;
+    margin: 32px 0 16px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .slide h3 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 24px 0 12px;
+    color: var(--accent-2);
+  }
+
+  .slide p {
+    font-size: 17px;
+    line-height: 1.65;
+    margin-bottom: 16px;
+    color: var(--ink);
+    max-width: 75ch;
+  }
+
+  .slide p.lead {
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 65ch;
+  }
+
+  .slide ul, .slide ol {
+    margin: 16px 0 20px 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .slide li {
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    padding-left: 32px;
+    position: relative;
+    max-width: 75ch;
+  }
+
+  .slide ul li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 12px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  .slide ol {
+    counter-reset: olist;
+  }
+
+  .slide ol li {
+    counter-increment: olist;
+  }
+
+  .slide ol li::before {
+    content: counter(olist, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .slide strong {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .slide em {
+    font-style: italic;
+    color: var(--accent-2);
+  }
+
+  /* CAJAS */
+  .box {
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    position: relative;
+    border-left: 4px solid;
+  }
+
+  .box-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .box-concept {
+    background: rgba(45, 95, 107, 0.07);
+    border-left-color: var(--accent-2);
+  }
+  .box-concept .box-label { color: var(--accent-2); }
+
+  .box-example {
+    background: rgba(201, 169, 97, 0.12);
+    border-left-color: var(--accent-3);
+  }
+  .box-example .box-label { color: #8a7330; }
+
+  .box-tip {
+    background: rgba(74, 107, 58, 0.08);
+    border-left-color: var(--green);
+  }
+  .box-tip .box-label { color: var(--green); }
+
+  .box p, .box li {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .box p:last-child, .box li:last-child { margin-bottom: 0; }
+
+  /* TABLA */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: var(--paper);
+    box-shadow: var(--shadow-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  th {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    text-align: left;
+    padding: 14px 16px;
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: rgba(26, 29, 41, 0.02); }
+
+  /* PORTADA */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100%;
+    position: relative;
+  }
+
+  .cover-meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .cover h1 {
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    line-height: 0.95;
+    font-weight: 300;
+    margin-bottom: 32px;
+    letter-spacing: -0.035em;
+  }
+
+  .cover h1 .accent-word {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+    display: block;
+  }
+
+  .cover-subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    color: var(--accent-2);
+    margin-bottom: 48px;
+    line-height: 1.3;
+    max-width: 24ch;
+  }
+
+  .cover-divider {
+    width: 80px;
+    height: 2px;
+    background: var(--ink);
+    margin-bottom: 24px;
+  }
+
+  .cover-foot {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .cover-foot-item {
+    border-left: 1px solid var(--line);
+    padding-left: 16px;
+  }
+
+  .cover-foot-item .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .cover-foot-item .value {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .cover-decoration {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-display);
+    font-size: 380px;
+    font-style: italic;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* INDEX */
+  .toc {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .toc-item {
+    padding: 20px;
+    background: var(--paper-2);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .toc-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-med);
+  }
+
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .toc-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  /* DOS COLUMNAS */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin: 20px 0;
+  }
+
+  /* PANEL DE EXAMEN */
+  .exam-intro {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .exam-icon {
+    font-family: var(--font-display);
+    font-size: 80px;
+    font-style: italic;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  .exam-intro h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+
+  .exam-intro p {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .exam-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 32px 0;
+    flex-wrap: wrap;
+  }
+
+  .exam-stat {
+    text-align: center;
+  }
+
+  .exam-stat .num {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 400;
+    color: var(--accent-2);
+    line-height: 1;
+  }
+
+  .exam-stat .lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* PREGUNTAS */
+  .question-block {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .question-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .question-text {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    padding: 16px 20px;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 16px;
+    line-height: 1.5;
+    font-family: var(--font-body);
+    text-align: left;
+    width: 100%;
+    color: var(--ink);
+  }
+
+  .option:hover:not(:disabled) {
+    border-color: var(--accent-2);
+    background: rgba(45, 95, 107, 0.04);
+  }
+
+  .option-letter {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+    width: 24px;
+  }
+
+  .option.selected {
+    border-color: var(--accent-2);
+    background: rgba(45, 95, 107, 0.08);
+  }
+
+  .option.selected .option-letter {
+    color: var(--accent-2);
+  }
+
+  .option.correct {
+    border-color: var(--green);
+    background: rgba(74, 107, 58, 0.1);
+  }
+  .option.correct .option-letter { color: var(--green); }
+
+  .option.incorrect {
+    border-color: var(--accent);
+    background: rgba(217, 79, 46, 0.08);
+  }
+  .option.incorrect .option-letter { color: var(--accent); }
+
+  .option:disabled { cursor: default; }
+
+  .feedback {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 4px;
+    font-size: 15px;
+    line-height: 1.55;
+    border-left: 3px solid;
+    display: none;
+  }
+
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+
+  .feedback.right {
+    background: rgba(74, 107, 58, 0.1);
+    border-left-color: var(--green);
+    color: var(--ink);
+  }
+
+  .feedback.wrong {
+    background: rgba(217, 79, 46, 0.08);
+    border-left-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .feedback strong { font-weight: 700; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* RESULTADO FINAL */
+  .result {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .result-score {
+    font-family: var(--font-display);
+    font-size: clamp(6rem, 16vw, 11rem);
+    font-weight: 300;
+    line-height: 0.9;
+    color: var(--accent);
+    margin: 20px 0;
+    letter-spacing: -0.04em;
+  }
+
+  .result-score .over {
+    font-size: 0.35em;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .result-label {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 32px;
+    margin-bottom: 12px;
+    color: var(--accent-2);
+  }
+
+  .result-msg {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 50ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .result-detail {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin: 32px 0;
+    flex-wrap: wrap;
+  }
+
+  .result-detail-item {
+    border: 1px solid var(--line);
+    padding: 16px 24px;
+    border-radius: 4px;
+    min-width: 120px;
+  }
+
+  .result-detail-item .v {
+    font-family: var(--font-display);
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .result-detail-item.ok .v { color: var(--green); }
+  .result-detail-item.fail .v { color: var(--accent); }
+
+  .result-detail-item .l {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .btn-restart {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 14px 32px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-restart:hover {
+    background: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* CONTROLES */
+  .controls {
+    padding: 16px 40px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(245, 241, 234, 0.85);
+    backdrop-filter: blur(10px);
+    gap: 20px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    padding: 10px 22px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .nav-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+  }
+
+  .nav-btn.primary:hover:not(:disabled) {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .keyboard-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .keyboard-hint kbd {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin: 0 2px;
+  }
+
+  /* HIGHLIGHT TEXT */
+  .highlight {
+    background: linear-gradient(180deg, transparent 60%, rgba(201, 169, 97, 0.35) 60%);
+    padding: 0 2px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header { padding: 14px 20px; }
+    .progress-track { margin: 0 16px; }
+    main { padding: 20px; }
+    .slide { inset: 20px; }
+    .controls { padding: 12px 20px; }
+    .toc { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .keyboard-hint { display: none; }
+    .cover-decoration { display: none; }
+    .nav-btn { padding: 10px 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">IR</div>
+      <div class="brand-text">
+        <div class="t1">Ingeniería de Requerimientos</div>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="slide-counter"><strong id="curSlide">01</strong> / <span id="totSlides">14</span></div>
+  </header>
+
+  <main id="stage">
+
+    <!-- SLIDE 1: PORTADA -->
+    <section class="slide active" data-slide="1">
+      <div class="slide-inner cover">
+        <div class="cover-decoration">R</div>
+        <div class="cover-meta">Unidad 3 · Material Interactivo</div>
+        <h1>Ingeniería de<span class="accent-word">requerimientos.</span></h1>
+        <div class="cover-subtitle">Técnicas, modelado, especificación, validación y gestión.</div>
+        <div class="cover-divider"></div>
+        <div class="cover-foot">
+          
+          <div class="cover-foot-item">
+            <div class="label">Evaluación</div>
+            <div class="value">10 preguntas al final</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: ÍNDICE -->
+    <section class="slide" data-slide="2">
+      <div class="slide-inner">
+        <div class="eyebrow">Contenido</div>
+        <h1>Lo que veremos <em>hoy</em></h1>
+        <p class="lead">Seis subtemas que abarcan el ciclo completo de los requerimientos, desde el primer contacto con el cliente hasta el control de cambios en producción.</p>
+        <div class="toc">
+          <div class="toc-item" onclick="goTo(3)">
+            <div class="toc-num">3.2</div>
+            <div class="toc-title">Técnicas de recolección</div>
+          </div>
+          <div class="toc-item" onclick="goTo(5)">
+            <div class="toc-num">3.3</div>
+            <div class="toc-title">Análisis y modelado con UML</div>
+          </div>
+          <div class="toc-item" onclick="goTo(7)">
+            <div class="toc-num">3.4</div>
+            <div class="toc-title">Especificación de requerimientos</div>
+          </div>
+          <div class="toc-item" onclick="goTo(9)">
+            <div class="toc-num">3.5</div>
+            <div class="toc-title">Revisión y validación</div>
+          </div>
+          <div class="toc-item" onclick="goTo(10)">
+            <div class="toc-num">3.6</div>
+            <div class="toc-title">Gestión de requerimientos</div>
+          </div>
+          <div class="toc-item" onclick="goTo(11)">
+            <div class="toc-num">3.7</div>
+            <div class="toc-title">Control de cambios y trazabilidad</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: 3.2 INTRO RECOLECCIÓN -->
+    <section class="slide" data-slide="3">
+      <div class="slide-inner">
+        <div class="eyebrow">3.2 · Recolección</div>
+        <h1>Técnicas de <em>recolección</em></h1>
+        <p class="lead">La recolección —también llamada elicitación— es el proceso de descubrir, mediante interacción con personas y documentos, qué necesidades reales debe satisfacer el software.</p>
+
+        <div class="box box-concept">
+          <div class="box-label">◆ Concepto clave</div>
+          <p>Los usuarios rara vez te dicen literalmente lo que necesitan. Suelen describir <strong>síntomas</strong> ("el sistema es lento") o <strong>soluciones imaginadas</strong> ("quiero un botón rojo"). Tu trabajo es llegar al problema real.</p>
+        </div>
+
+        <h2>Cuatro técnicas fundamentales</h2>
+        <ul>
+          <li><strong>Entrevistas</strong> — conversaciones uno a uno o en grupos pequeños. Permiten profundizar.</li>
+          <li><strong>Cuestionarios</strong> — preguntas estructuradas para audiencias amplias.</li>
+          <li><strong>Talleres (JAD)</strong> — sesiones grupales facilitadas con varios interesados.</li>
+          <li><strong>Análisis de documentos</strong> — revisión de manuales, formatos, normativas, reglamentos.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: EJEMPLO ENTREVISTA -->
+    <section class="slide" data-slide="4">
+      <div class="slide-inner">
+        <div class="eyebrow">3.2 · Aplicación</div>
+        <h1>Una entrevista <em>bien hecha</em></h1>
+
+        <div class="box box-example">
+          <div class="box-label">▲ Ejemplo: biblioteca universitaria</div>
+          <p><strong>Pregunta abierta:</strong> "Cuénteme cómo es un día normal en el mostrador de préstamos."</p>
+          <p><strong>Respuesta reveladora:</strong> "Lo más pesado es a las 8 a.m. cuando llegan los alumnos a devolver libros antes de su clase de 9. Si el sistema se cae, formamos colas de 30 personas."</p>
+          <p><strong>Requerimiento descubierto:</strong> el sistema debe tolerar picos de 100 devoluciones en 15 minutos y tener modo offline para registrar cuando la red falle. <em>Esto no habría salido en un cuestionario cerrado.</em></p>
+        </div>
+
+        <h3>Buenas prácticas para entrevistar</h3>
+        <ul>
+          <li>Prepara preguntas, pero no las leas como interrogatorio.</li>
+          <li>Pregunta <em>"¿por qué?"</em> varias veces (técnica de los 5 porqués).</li>
+          <li>Cierra con un resumen verbal: "Lo que entendí es… ¿es correcto?"</li>
+          <li>Nunca entrevistes solo a los jefes: los usuarios operativos conocen los problemas reales.</li>
+        </ul>
+
+        <div class="box box-tip">
+          <div class="box-label">✓ Regla de oro</div>
+          <p>En la práctica nunca se usa una sola técnica. Una secuencia típica: análisis de documentos → entrevistas → taller → cuestionario para validar prioridades con población amplia.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: 3.3 UML -->
+    <section class="slide" data-slide="5">
+      <div class="slide-inner">
+        <div class="eyebrow">3.3 · Modelado</div>
+        <h1>Modelado con <em>UML</em></h1>
+        <p class="lead">El texto en lenguaje natural es ambiguo. Un diagrama obliga a precisar relaciones, actores y secuencias —y revela huecos que el texto oculta.</p>
+
+        <h2>Diagramas más usados en análisis</h2>
+        <table>
+          <thead><tr><th>Diagrama</th><th>Representa</th><th>Cuándo usarlo</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Casos de uso</strong></td><td>Funcionalidad vista desde los actores externos</td><td>Acordar alcance con cliente</td></tr>
+            <tr><td><strong>Actividades</strong></td><td>Flujo paso a paso con decisiones y paralelismo</td><td>Procesos de negocio complejos</td></tr>
+            <tr><td><strong>Secuencia</strong></td><td>Interacción cronológica entre objetos</td><td>Detallar cómo se cumple un caso de uso</td></tr>
+            <tr><td><strong>Clases (análisis)</strong></td><td>Conceptos del dominio y sus relaciones</td><td>Modelar vocabulario y datos</td></tr>
+            <tr><td><strong>Estados</strong></td><td>Comportamiento durante el ciclo de vida</td><td>Entidades con muchos estados (pedido, préstamo)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Diagrama de casos de uso · tres elementos</h3>
+        <ul>
+          <li><strong>Actor:</strong> rol externo que interactúa (usuario, otro sistema, tiempo). Se dibuja como un "monito".</li>
+          <li><strong>Caso de uso:</strong> objetivo que el actor logra. Verbo + objeto: <em>"Registrar préstamo"</em>.</li>
+          <li><strong>Relaciones:</strong> <em>include</em> (siempre incluye otro) y <em>extend</em> (lo extiende en ciertas condiciones).</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: EJEMPLO CASO DE USO -->
+    <section class="slide" data-slide="6">
+      <div class="slide-inner">
+        <div class="eyebrow">3.3 · Plantilla</div>
+        <h1>Caso de uso <em>en forma textual</em></h1>
+        <p>El diagrama da la visión panorámica, pero cada caso de uso necesita una descripción textual que sirva como contrato funcional.</p>
+
+        <div class="box box-example">
+          <div class="box-label">▲ CU-03: Registrar préstamo</div>
+          <p><strong>Actor principal:</strong> Bibliotecario.</p>
+          <p><strong>Precondición:</strong> El bibliotecario está autenticado y el libro está en el catálogo.</p>
+          <p><strong>Flujo principal:</strong></p>
+          <ol>
+            <li>El bibliotecario escanea el código del libro.</li>
+            <li>El sistema muestra los datos y verifica disponibilidad.</li>
+            <li>El bibliotecario escanea la credencial del alumno.</li>
+            <li>El sistema verifica que no haya multas ni préstamos vencidos.</li>
+            <li>El sistema registra el préstamo con devolución a 14 días.</li>
+            <li>El sistema imprime el comprobante.</li>
+          </ol>
+          <p><strong>Flujo alternativo 4a:</strong> si el alumno tiene multas, el sistema muestra el monto y bloquea el préstamo.</p>
+          <p><strong>Postcondición:</strong> el libro queda marcado como prestado y el alumno suma un préstamo activo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: 3.4 ESPECIFICACIÓN -->
+    <section class="slide" data-slide="7">
+      <div class="slide-inner">
+        <div class="eyebrow">3.4 · Especificación</div>
+        <h1>Especificación de <em>requerimientos</em></h1>
+        <p class="lead">Escribir los requerimientos de manera precisa, completa y verificable. El documento se llama SRS (Software Requirements Specification), normado por el estándar IEEE 830.</p>
+
+        <div class="box box-concept">
+          <div class="box-label">◆ Tipos de requerimientos</div>
+          <p><strong>Funcionales:</strong> <em>qué</em> debe hacer el sistema. "El sistema debe permitir registrar un préstamo."</p>
+          <p><strong>No funcionales:</strong> <em>cómo</em> debe comportarse. "El registro debe completarse en menos de 2 segundos con 100 usuarios concurrentes."</p>
+          <p><strong>De dominio:</strong> restricciones del campo de aplicación. "Se aplican las disposiciones del Reglamento de Bibliotecas."</p>
+        </div>
+
+        <h2>Formato EARS para redactar sin ambigüedad</h2>
+        <ul>
+          <li><strong>Ubicua:</strong> "El sistema DEBE &lt;comportamiento&gt;".</li>
+          <li><strong>Activada por evento:</strong> "CUANDO &lt;evento&gt;, el sistema DEBE…"</li>
+          <li><strong>No deseada:</strong> "SI &lt;condición&gt;, ENTONCES el sistema DEBE…"</li>
+          <li><strong>Estado:</strong> "MIENTRAS &lt;estado&gt;, el sistema DEBE…"</li>
+          <li><strong>Opcional:</strong> "DONDE &lt;característica habilitada&gt;, el sistema DEBE…"</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: BUENAS PRÁCTICAS ESPECIFICACIÓN -->
+    <section class="slide" data-slide="8">
+      <div class="slide-inner">
+        <div class="eyebrow">3.4 · Calidad</div>
+        <h1>Un buen requerimiento <em>tiene 7 atributos</em></h1>
+
+        <table>
+          <thead><tr><th>Atributo</th><th>Significa</th><th>Ejemplo negativo</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Completo</strong></td><td>No falta información para implementarlo</td><td>"El sistema debe notificar." ¿A quién?</td></tr>
+            <tr><td><strong>No ambiguo</strong></td><td>Una sola interpretación posible</td><td>"Debe ser rápido." ¿Qué es rápido?</td></tr>
+            <tr><td><strong>Verificable</strong></td><td>Se puede probar si se cumple</td><td>"Debe ser intuitivo." ¿Cómo se mide?</td></tr>
+            <tr><td><strong>Consistente</strong></td><td>No contradice otros requerimientos</td><td>Uno dice 5 años, otro dice 3</td></tr>
+            <tr><td><strong>Trazable</strong></td><td>Tiene ID único y se puede rastrear</td><td>Lista sin numeración</td></tr>
+            <tr><td><strong>Necesario</strong></td><td>Si se elimina, se pierde valor real</td><td>"El botón debe ser azul" (es diseño)</td></tr>
+            <tr><td><strong>Factible</strong></td><td>Posible con tiempo y recursos</td><td>"Predecir el clima con 100%"</td></tr>
+          </tbody>
+        </table>
+
+        <div class="box box-tip">
+          <div class="box-label">✓ Antipatrones a evitar</div>
+          <ul>
+            <li><strong>Verbos vagos:</strong> "manejar", "procesar". Usa: registrar, validar, calcular.</li>
+            <li><strong>Adjetivos sin métrica:</strong> "amigable", "robusto". Si no lo mides, no lo verificas.</li>
+            <li><strong>Mezclar qué con cómo:</strong> "usar MySQL" limita opciones de diseño.</li>
+            <li><strong>Requerimientos compuestos:</strong> "el sistema debe X <em>y</em> Y". Sepáralos.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: 3.5 VALIDACIÓN -->
+    <section class="slide" data-slide="9">
+      <div class="slide-inner">
+        <div class="eyebrow">3.5 · Validación</div>
+        <h1>Revisión y <em>validación</em></h1>
+
+        <div class="box box-concept">
+          <div class="box-label">◆ Distinción esencial</div>
+          <p><strong>Verificación:</strong> <em>¿estamos construyendo el producto correctamente?</em> Revisa que el documento esté bien hecho.</p>
+          <p><strong>Validación:</strong> <em>¿estamos construyendo el producto correcto?</em> Revisa que los requerimientos reflejen lo que el cliente realmente necesita.</p>
+        </div>
+
+        <h2>Cinco técnicas de validación</h2>
+        <ol>
+          <li><strong>Revisión formal con el cliente</strong> — sección por sección del SRS.</li>
+          <li><strong>Prototipado</strong> — maquetas o versiones funcionales limitadas que el cliente pueda "tocar".</li>
+          <li><strong>Casos de prueba derivados</strong> — uno por cada requerimiento; si no se puede escribir, el requerimiento no es verificable.</li>
+          <li><strong>Validación con escenarios</strong> — recorrer cada caso de uso narrando la historia.</li>
+          <li><strong>Walkthroughs e inspecciones</strong> — reuniones estructuradas con roles definidos.</li>
+        </ol>
+
+        <div class="box box-example">
+          <div class="box-label">▲ Criterios de aceptación (estilo BDD)</div>
+          <p><strong>RF-03:</strong> Si el alumno tiene multas pendientes, bloquear préstamos.</p>
+          <p><em>Dado</em> un alumno con multa de $50, <em>cuando</em> el bibliotecario intente el préstamo, <em>entonces</em> el sistema muestra "Préstamo bloqueado: multa de $50" y no crea el registro.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: 3.6 GESTIÓN -->
+    <section class="slide" data-slide="10">
+      <div class="slide-inner">
+        <div class="eyebrow">3.6 · Gestión</div>
+        <h1>Gestión de <em>requerimientos</em></h1>
+        <p class="lead">Los requerimientos cambian: el negocio evoluciona, los usuarios descubren necesidades, surgen restricciones técnicas. Gestionar es controlar este flujo sin perder el rumbo.</p>
+
+        <h2>Priorización · técnica MoSCoW</h2>
+        <div class="box box-example">
+          <div class="box-label">▲ MVP de biblioteca</div>
+          <p><strong>Must</strong> (indispensable): registrar préstamo, devolución, autenticar, consultar catálogo.</p>
+          <p><strong>Should</strong> (debería): calcular multas, enviar recordatorios por correo.</p>
+          <p><strong>Could</strong> (podría): reservar desde portal, recomendaciones según historial.</p>
+          <p><strong>Won't</strong> (esta versión): integración con otras universidades, app móvil nativa.</p>
+        </div>
+
+        <h3>Estados del ciclo de vida</h3>
+        <ul>
+          <li><strong>Propuesto</strong> → alguien lo sugirió, no se aprueba aún.</li>
+          <li><strong>Aprobado</strong> → fue revisado y aceptado para la línea base.</li>
+          <li><strong>En desarrollo</strong> → está siendo implementado.</li>
+          <li><strong>Implementado</strong> → el código está escrito y compila.</li>
+          <li><strong>Verificado</strong> → pasó pruebas internas.</li>
+          <li><strong>Validado</strong> → el cliente lo aceptó.</li>
+          <li><strong>Rechazado o diferido</strong> → no se implementa o se posterga.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: 3.7 CONTROL DE CAMBIOS -->
+    <section class="slide" data-slide="11">
+      <div class="slide-inner">
+        <div class="eyebrow">3.7 · Control de cambios</div>
+        <h1>Control de <em>cambios</em></h1>
+        <p class="lead">Los cambios son inevitables, pero deben ser controlados. Un cambio mal gestionado es la primera causa de retrasos y sobrecostos.</p>
+
+        <h2>Proceso típico</h2>
+        <ol>
+          <li><strong>Solicitud de cambio</strong> (Change Request): descripción, justificación, solicitante.</li>
+          <li><strong>Análisis de impacto</strong>: qué requerimientos, módulos, pruebas se afectan.</li>
+          <li><strong>Decisión del CCB</strong> (Comité de Control de Cambios): aprueba, rechaza o difiere.</li>
+          <li><strong>Implementación</strong>: actualizar SRS, casos de uso, pruebas y código.</li>
+          <li><strong>Verificación y cierre</strong> del Change Request.</li>
+        </ol>
+
+        <h2>Trazabilidad</h2>
+        <div class="box box-concept">
+          <div class="box-label">◆ Tres direcciones</div>
+          <p><strong>Hacia atrás:</strong> del requerimiento hacia su origen (quién lo solicitó, en qué reunión).</p>
+          <p><strong>Hacia adelante:</strong> hacia los artefactos derivados (diseño, código, pruebas).</p>
+          <p><strong>Horizontal:</strong> entre requerimientos del mismo nivel (qué dependencias existen).</p>
+        </div>
+
+        <h3>Matriz de trazabilidad · ejemplo</h3>
+        <table>
+          <thead><tr><th>Requerimiento</th><th>Caso de uso</th><th>Módulo</th><th>Prueba</th></tr></thead>
+          <tbody>
+            <tr><td>RF-01 Registrar préstamo</td><td>CU-03</td><td>PrestamoService.java</td><td>TP-15, TP-16</td></tr>
+            <tr><td>RF-02 Recordatorio 14 días</td><td>CU-07</td><td>RecordatorioScheduler.java</td><td>TP-22</td></tr>
+            <tr><td>RF-03 Bloquear multas</td><td>CU-03 (alt 4a)</td><td>ValidacionAlumno.java</td><td>TP-17, TP-18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SLIDE 12: SÍNTESIS -->
+    <section class="slide" data-slide="12">
+      <div class="slide-inner">
+        <div class="eyebrow">Síntesis</div>
+        <h1>Mapa del <em>conocimiento</em></h1>
+        <p class="lead">La Ingeniería de Requerimientos no es una fase aislada: es un trabajo continuo que abarca recolectar, modelar, especificar, validar, gestionar y controlar cambios.</p>
+
+        <table>
+          <thead><tr><th>Subtema</th><th>Pregunta que responde</th><th>Producto principal</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3.2 Recolección</strong></td><td>¿Qué necesita el usuario?</td><td>Notas, hallazgos</td></tr>
+            <tr><td><strong>3.3 UML</strong></td><td>¿Cómo organizar lo que sabemos?</td><td>Diagramas (casos de uso, clases)</td></tr>
+            <tr><td><strong>3.4 Especificación</strong></td><td>¿Cómo escribirlo sin ambigüedad?</td><td>Documento SRS</td></tr>
+            <tr><td><strong>3.5 Validación</strong></td><td>¿Es lo que el cliente realmente quiere?</td><td>Acta de aceptación</td></tr>
+            <tr><td><strong>3.6 Gestión</strong></td><td>¿Cómo administrarlo en el tiempo?</td><td>Backlog priorizado</td></tr>
+            <tr><td><strong>3.7 Control de cambios</strong></td><td>¿Cómo controlar lo que cambia?</td><td>Matriz de trazabilidad</td></tr>
+          </tbody>
+        </table>
+
+        <div class="box box-tip" style="margin-top: 28px;">
+          <div class="box-label">✓ Idea para llevarte</div>
+          <p>El SRS es el <strong>contrato técnico-funcional</strong> sobre el que se construye todo el software. Equivocarse aquí cuesta hasta 100 veces más que equivocarse en el código.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 13: INTRO EXAMEN -->
+    <section class="slide" data-slide="13">
+      <div class="slide-inner">
+        <div class="exam-intro">
+          <div class="exam-icon">?</div>
+          <div class="eyebrow" style="justify-content: center;">Evaluación</div>
+          <h1>Vamos a <em>practicar</em></h1>
+          <p class="lead">Diez preguntas sobre lo que acabas de revisar. Recibes retroalimentación inmediata y, al final, tu calificación.</p>
+          <div class="exam-stats">
+            <div class="exam-stat">
+              <div class="num">10</div>
+              <div class="lbl">Preguntas</div>
+            </div>
+            <div class="exam-stat">
+              <div class="num">1</div>
+              <div class="lbl">Punto c/u</div>
+            </div>
+            <div class="exam-stat">
+              <div class="num">6.0</div>
+              <div class="lbl">Mínima aprobatoria</div>
+            </div>
+          </div>
+          <p style="font-size: 14px; color: var(--muted); margin-top: 24px;">Avanza con el botón <strong>Siguiente</strong> o con la tecla <kbd>→</kbd></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDES 14-23: PREGUNTAS (se inyectan con JS) -->
+    <div id="questionsContainer"></div>
+
+    <!-- SLIDE FINAL: RESULTADO -->
+    <section class="slide" data-slide="final">
+      <div class="slide-inner">
+        <div class="result">
+          <div class="eyebrow" style="justify-content: center;">Resultado final</div>
+          <div class="result-label" id="resultLabel">—</div>
+          <div class="result-score">
+            <span id="finalScore">0.0</span><span class="over"> / 10</span>
+          </div>
+          <div class="result-msg" id="resultMsg">—</div>
+          <div class="result-detail">
+            <div class="result-detail-item ok">
+              <div class="v" id="correctCount">0</div>
+              <div class="l">Correctas</div>
+            </div>
+            <div class="result-detail-item fail">
+              <div class="v" id="wrongCount">0</div>
+              <div class="l">Incorrectas</div>
+            </div>
+            <div class="result-detail-item">
+              <div class="v" id="percentage">0%</div>
+              <div class="l">Aciertos</div>
+            </div>
+          </div>
+          <button class="btn-restart" onclick="restartExam()">Reintentar examen</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="controls">
+    <button class="nav-btn" id="prevBtn" onclick="prev()">← Anterior</button>
+    <div class="keyboard-hint">Usa <kbd>←</kbd> <kbd>→</kbd> para navegar</div>
+    <button class="nav-btn primary" id="nextBtn" onclick="next()">Siguiente →</button>
+  </footer>
+
+</div>
+
+<script>
+  // ============ PREGUNTAS DEL EXAMEN ============
+  const QUESTIONS = [
+    {
+      q: "Durante el levantamiento de requerimientos para un sistema de pedidos en línea, necesitas información detallada de 200 clientes sobre frecuencia de compra y preferencias. ¿Qué técnica de recolección es la más adecuada?",
+      options: [
+        "Entrevistas individuales con cada cliente",
+        "Cuestionario estructurado",
+        "Taller JAD con todos los clientes",
+        "Análisis de documentos internos"
+      ],
+      correct: 1,
+      explanation: "El cuestionario es ideal cuando se necesita información cuantificable de audiencias grandes (más de 20 personas). Las entrevistas a 200 personas serían inviables y un taller con esa cantidad sería caótico."
+    },
+    {
+      q: "Un alumno te dice: «El sistema actual es muy lento». Como ingeniero de requerimientos, ¿cuál es la acción correcta?",
+      options: [
+        "Documentar literalmente: «El sistema debe ser rápido»",
+        "Asumir que necesita un servidor más potente",
+        "Preguntar «¿por qué?» varias veces para llegar al problema real",
+        "Pasarlo directamente al equipo de infraestructura"
+      ],
+      correct: 2,
+      explanation: "Los usuarios describen síntomas o soluciones imaginadas, no problemas reales. La técnica de los 5 porqués ayuda a llegar a la causa raíz: tal vez el problema no es la velocidad del servidor sino el flujo de trabajo, las búsquedas mal indexadas o algo más."
+    },
+    {
+      q: "En un diagrama de casos de uso, la relación «include» significa que:",
+      options: [
+        "Un caso de uso opcionalmente puede extender a otro",
+        "Un caso de uso siempre incluye la ejecución de otro caso de uso",
+        "Un actor está incluido dentro de un caso de uso",
+        "Dos casos de uso son equivalentes"
+      ],
+      correct: 1,
+      explanation: "«Include» indica una relación obligatoria: el caso de uso base siempre incluye la ejecución del caso de uso incluido. Ejemplo: «Registrar préstamo» include «Verificar identidad» — la verificación es obligatoria. «Extend» en cambio es condicional."
+    },
+    {
+      q: "¿Cuál de los siguientes está redactado correctamente en formato EARS?",
+      options: [
+        "El sistema debe manejar los préstamos de manera eficiente",
+        "CUANDO un préstamo cumpla 14 días sin devolución, el sistema DEBE enviar un correo de recordatorio al alumno",
+        "El sistema podría tener una función de recordatorios si es posible",
+        "Los préstamos vencidos generan recordatorios automáticamente"
+      ],
+      correct: 1,
+      explanation: "El formato EARS \"activado por evento\" sigue la estructura: CUANDO &lt;evento&gt;, el sistema DEBE &lt;comportamiento&gt;. La opción correcta es específica, medible y verificable. Las demás contienen verbos vagos («manejar»), adjetivos sin métrica («eficiente») o condicionales débiles («podría»)."
+    },
+    {
+      q: "¿Cuál es la diferencia fundamental entre verificación y validación de requerimientos?",
+      options: [
+        "Verificación la hace el cliente, validación el equipo de desarrollo",
+        "Son sinónimos; ambos términos refieren a la misma actividad",
+        "Verificación pregunta si construimos el producto correctamente; validación pregunta si construimos el producto correcto",
+        "Verificación es para software, validación es para hardware"
+      ],
+      correct: 2,
+      explanation: "Verificación = ¿lo estamos haciendo bien? (calidad interna del documento, sin errores formales). Validación = ¿estamos haciendo lo correcto? (los requerimientos reflejan lo que el cliente realmente necesita). Un documento puede estar perfectamente escrito (verificación OK) pero describir un producto que el cliente no quiere (validación FALLA)."
+    },
+    {
+      q: "En la priorización MoSCoW, los requerimientos clasificados como «Must» son aquellos que:",
+      options: [
+        "Sería bonito tener si hay tiempo extra",
+        "Son indispensables para el MVP; si no están, el sistema no entrega valor",
+        "Se posponen para versiones futuras",
+        "El equipo de desarrollo considera técnicamente interesantes"
+      ],
+      correct: 1,
+      explanation: "Must = imprescindibles, no negociables para el MVP. Should = deberían estar pero no bloquean. Could = serían deseables. Won't = explícitamente fuera del alcance actual. Decir «todo es Must» revela que no hubo priorización real."
+    },
+    {
+      q: "¿Cuál de los siguientes NO es una característica de un buen requerimiento?",
+      options: [
+        "Verificable: se puede probar si se cumple o no",
+        "No ambiguo: admite una sola interpretación",
+        "Detallado: incluye decisiones específicas de implementación como qué base de datos usar",
+        "Trazable: tiene un identificador único"
+      ],
+      correct: 2,
+      explanation: "Un buen requerimiento NO debe mezclar el «qué» con el «cómo». Especificar «usar MySQL» dentro de un requerimiento funcional limita las decisiones del equipo de diseño y mezcla niveles. Las decisiones técnicas pertenecen al documento de diseño, no al SRS."
+    },
+    {
+      q: "Una matriz de trazabilidad sirve principalmente para:",
+      options: [
+        "Calcular el costo total del proyecto",
+        "Conectar cada requerimiento con sus casos de uso, módulos de código y pruebas asociadas",
+        "Asignar tareas al equipo de desarrollo",
+        "Documentar la asistencia a reuniones"
+      ],
+      correct: 1,
+      explanation: "La matriz de trazabilidad permite responder preguntas como: «si elimino este requerimiento, ¿qué pruebas dejan de tener sentido?» o «¿de dónde salió esta función del código?». Es esencial para evaluar impacto de cambios y para auditorías en industrias reguladas."
+    },
+    {
+      q: "Llega una solicitud de cambio (Change Request) al proyecto. Antes de aprobarla o rechazarla, ¿qué paso es OBLIGATORIO realizar?",
+      options: [
+        "Implementarla de inmediato para no retrasar el proyecto",
+        "Realizar un análisis de impacto sobre requerimientos, código, pruebas y esfuerzo estimado",
+        "Cancelar todos los demás cambios pendientes",
+        "Notificar únicamente al cliente que solicitó el cambio"
+      ],
+      correct: 1,
+      explanation: "El análisis de impacto es el paso crítico del control de cambios: identifica qué se afecta (requerimientos, módulos, pruebas, documentos) y estima el esfuerzo adicional. Sin este análisis, el CCB (Comité de Control de Cambios) no puede tomar una decisión informada y se generan retrasos y sobrecostos."
+    },
+    {
+      q: "Estás validando con un cliente el requerimiento «El usuario puede agregar productos al carrito» y aprueba en papel. Pero cuando ve un prototipo en Figma, surge: «también necesito comparar dos productos y guardar para después». ¿Qué técnica de validación reveló estos nuevos requerimientos?",
+      options: [
+        "Inspección formal",
+        "Cuestionario",
+        "Prototipado",
+        "Análisis de documentos"
+      ],
+      correct: 2,
+      explanation: "El prototipado es especialmente eficaz para validar requerimientos que en papel suenan completos pero en uso revelan vacíos. Permite al cliente «tocar» el sistema antes de programar nada, evitando descubrimientos costosos en fases posteriores del desarrollo."
+    }
+  ];
+
+  // ============ ESTADO ============
+  let currentSlide = 1;
+  let totalSlides = 0;
+  const answers = new Array(QUESTIONS.length).fill(null);
+  const examStartSlide = 14; // primera pregunta
+  const finalSlideIndex = examStartSlide + QUESTIONS.length; // slide de resultados
+
+  // ============ GENERAR PREGUNTAS ============
+  function buildQuestions() {
+    const container = document.getElementById('questionsContainer');
+    QUESTIONS.forEach((Q, idx) => {
+      const slideNum = examStartSlide + idx;
+      const letters = ['A', 'B', 'C', 'D'];
+      const optionsHTML = Q.options.map((opt, i) => `
+        <button class="option" data-q="${idx}" data-opt="${i}" onclick="selectAnswer(${idx}, ${i})">
+          <span class="option-letter">${letters[i]}</span>
+          <span>${opt}</span>
+        </button>
+      `).join('');
+
+      const slide = document.createElement('section');
+      slide.className = 'slide';
+      slide.dataset.slide = slideNum;
+      slide.innerHTML = `
+        <div class="slide-inner">
+          <div class="question-block">
+            <div class="question-num">Pregunta ${idx + 1} de ${QUESTIONS.length}</div>
+            <div class="question-text">${Q.q}</div>
+            <div class="options" id="opts-${idx}">
+              ${optionsHTML}
+            </div>
+            <div class="feedback" id="fb-${idx}"></div>
+          </div>
+        </div>
+      `;
+      container.appendChild(slide);
+    });
+  }
+
+  // ============ NAVEGACIÓN ============
+  function getAllSlides() {
+    return document.querySelectorAll('.slide');
+  }
+
+  function showSlide(num) {
+    const slides = getAllSlides();
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'prev');
+      const slideIdx = i + 1;
+      if (slideIdx === num) {
+        s.classList.add('active');
+      } else if (slideIdx < num) {
+        s.classList.add('prev');
+      }
+    });
+    currentSlide = num;
+    updateUI();
+  }
+
+  function updateUI() {
+    const total = getAllSlides().length;
+    totalSlides = total;
+    document.getElementById('totSlides').textContent = String(total).padStart(2, '0');
+    document.getElementById('curSlide').textContent = String(currentSlide).padStart(2, '0');
+    const pct = (currentSlide / total) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = currentSlide === 1;
+    const nextBtn = document.getElementById('nextBtn');
+    if (currentSlide === total) {
+      nextBtn.disabled = true;
+      nextBtn.textContent = 'Fin';
+    } else {
+      nextBtn.disabled = false;
+      // si estamos en una pregunta sin contestar, deshabilitar
+      const qIdx = currentSlide - examStartSlide;
+      if (qIdx >= 0 && qIdx < QUESTIONS.length && answers[qIdx] === null) {
+        nextBtn.disabled = true;
+        nextBtn.textContent = 'Selecciona una opción';
+      } else {
+        nextBtn.textContent = currentSlide === total - 1 ? 'Ver resultado →' : 'Siguiente →';
+      }
+    }
+  }
+
+  function next() {
+    if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+  }
+
+  function prev() {
+    if (currentSlide > 1) showSlide(currentSlide - 1);
+  }
+
+  function goTo(n) {
+    showSlide(n);
+  }
+
+  // ============ SELECCIÓN DE RESPUESTA ============
+  function selectAnswer(qIdx, optIdx) {
+    if (answers[qIdx] !== null) return; // ya respondió
+
+    answers[qIdx] = optIdx;
+    const Q = QUESTIONS[qIdx];
+    const opts = document.querySelectorAll(`#opts-${qIdx} .option`);
+    opts.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === Q.correct) btn.classList.add('correct');
+      else if (i === optIdx) btn.classList.add('incorrect');
+    });
+
+    const fb = document.getElementById(`fb-${qIdx}`);
+    const isRight = optIdx === Q.correct;
+    fb.classList.add('show', isRight ? 'right' : 'wrong');
+    fb.innerHTML = `<strong>${isRight ? '✓ Correcto.' : '✗ Incorrecto.'}</strong> ${Q.explanation}`;
+
+    updateUI();
+
+    // Si es la última pregunta, calcular resultado
+    if (qIdx === QUESTIONS.length - 1) {
+      calculateResult();
+    }
+  }
+
+  // ============ RESULTADO ============
+  function calculateResult() {
+    let correct = 0;
+    answers.forEach((ans, i) => {
+      if (ans === QUESTIONS[i].correct) correct++;
+    });
+    const wrong = QUESTIONS.length - correct;
+    const score = (correct / QUESTIONS.length) * 10;
+    const pct = Math.round((correct / QUESTIONS.length) * 100);
+
+    document.getElementById('finalScore').textContent = score.toFixed(1);
+    document.getElementById('correctCount').textContent = correct;
+    document.getElementById('wrongCount').textContent = wrong;
+    document.getElementById('percentage').textContent = pct + '%';
+
+    let label, msg, color;
+    if (score === 10) {
+      label = 'Excelente';
+      msg = 'Calificación perfecta. Dominas los conceptos centrales de la Ingeniería de Requerimientos. Estás listo para aplicar estas técnicas en proyectos reales.';
+      color = 'var(--green)';
+    } else if (score >= 9) {
+      label = 'Muy bien';
+      msg = 'Resultado sobresaliente. Tienes un dominio sólido del tema; revisa la pregunta que fallaste para cerrar el círculo.';
+      color = 'var(--green)';
+    } else if (score >= 8) {
+      label = 'Bien';
+      msg = 'Buen desempeño. Conoces bien los conceptos clave. Repasa los temas donde tuviste errores para reforzar.';
+      color = 'var(--accent-2)';
+    } else if (score >= 6) {
+      label = 'Aprobado';
+      msg = 'Cumples con el mínimo aprobatorio. Te recomiendo repasar las diapositivas correspondientes a tus errores antes de aplicar estas técnicas en un proyecto.';
+      color = 'var(--accent-3)';
+    } else {
+      label = 'A repasar';
+      msg = 'Aún no alcanzas el mínimo aprobatorio. Vuelve a revisar las diapositivas, especialmente los temas donde tuviste errores, y reintenta el examen.';
+      color = 'var(--accent)';
+    }
+    const lbl = document.getElementById('resultLabel');
+    lbl.textContent = label;
+    lbl.style.color = color;
+    document.getElementById('resultMsg').textContent = msg;
+    document.getElementById('finalScore').style.color = color;
+  }
+
+  // ============ REINICIAR ============
+  function restartExam() {
+    answers.fill(null);
+    QUESTIONS.forEach((Q, idx) => {
+      const opts = document.querySelectorAll(`#opts-${idx} .option`);
+      opts.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('correct', 'incorrect', 'selected');
+      });
+      const fb = document.getElementById(`fb-${idx}`);
+      fb.classList.remove('show', 'right', 'wrong');
+      fb.innerHTML = '';
+    });
+    showSlide(examStartSlide);
+  }
+
+  // ============ TECLADO ============
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  // ============ INIT ============
+  buildQuestions();
+  showSlide(1);
+</script>
+
+</body>
+</html>
