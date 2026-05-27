@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad 3 · POE, UX, GUI y Excepciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1d2e;
+    --paper: #f4eee2;
+    --paper-deep: #ebe2d0;
+    --accent: #c64a3f;
+    --accent-deep: #8f3128;
+    --gold: #c8932a;
+    --teal: #2f5d62;
+    --teal-deep: #1d3f44;
+    --green: #5a7a3e;
+    --muted: #6b6657;
+    --line: #2a2d40;
+    --shadow: 0 4px 0 var(--ink);
+    --shadow-sm: 0 2px 0 var(--ink);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(198, 74, 63, 0.03) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, rgba(47, 93, 98, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ===== HEADER ===== */
+  header.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 4px 14px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .brand-mark {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .brand-mark .dot {
+    color: var(--accent);
+  }
+
+  .brand-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+
+  .progress-meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .score-pill {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .score-pill .num {
+    color: var(--gold);
+  }
+
+  /* ===== MAIN ===== */
+  main.slide-area {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 0;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 28px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 12px;
+    opacity: 0;
+    transform: translateX(40px);
+    pointer-events: none;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .slide::-webkit-scrollbar { width: 8px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb {
+    background: var(--ink);
+    border-radius: 4px;
+  }
+
+  /* Slide layout */
+  .slide-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding: 4px 10px;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+  }
+
+  .slide-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(32px, 5vw, 54px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+
+  .slide-title .accent {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .slide-subtitle {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--teal);
+    margin-bottom: 28px;
+  }
+
+  .lead {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+    max-width: 75ch;
+  }
+
+  .text {
+    font-size: 15.5px;
+    line-height: 1.65;
+    margin-bottom: 14px;
+    max-width: 78ch;
+    color: #2a2d40;
+  }
+
+  h3.section {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 24px 0 12px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h3.section::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  ul.bullets {
+    list-style: none;
+    margin: 8px 0 18px;
+  }
+
+  ul.bullets li {
+    position: relative;
+    padding-left: 26px;
+    margin-bottom: 10px;
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+
+  ul.bullets li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  ul.bullets li b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 18px 0;
+  }
+
+  .card {
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 10px;
+    color: var(--accent);
+  }
+
+  .card.teal h4 { color: var(--teal); }
+  .card p { font-size: 14.5px; line-height: 1.55; }
+
+  pre.code {
+    background: var(--ink);
+    color: #e8e3d5;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 18px 22px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 2px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--accent);
+    white-space: pre;
+  }
+
+  pre.code .kw { color: #ff8a7a; font-weight: 600; }
+  pre.code .str { color: #c8e6a0; }
+  pre.code .com { color: #8b8675; font-style: italic; }
+  pre.code .fn { color: #ffd27a; }
+  pre.code .num { color: #b8a4e8; }
+
+  table.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: #fff;
+    border: 2px solid var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  table.tbl th {
+    background: var(--ink);
+    color: var(--paper);
+    text-align: left;
+    padding: 12px 16px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  table.tbl td {
+    padding: 12px 16px;
+    border-top: 1.5px solid var(--paper-deep);
+    font-size: 14.5px;
+    vertical-align: top;
+  }
+
+  table.tbl td:first-child {
+    font-weight: 700;
+    color: var(--accent-deep);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+  }
+
+  .note {
+    background: var(--paper-deep);
+    border-left: 5px solid var(--teal);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .note b {
+    color: var(--teal-deep);
+    font-family: 'Fraunces', serif;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+
+  /* ===== QUIZ ===== */
+  .quiz {
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    padding: 28px;
+    margin: 24px 0;
+    box-shadow: 6px 6px 0 var(--accent);
+    position: relative;
+  }
+
+  .quiz::before {
+    content: '?';
+    position: absolute;
+    top: -22px;
+    left: -22px;
+    width: 50px;
+    height: 50px;
+    background: var(--accent);
+    color: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 26px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .quiz-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .quiz-question {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.3;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+
+  .quiz-question code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--paper-deep);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+
+  .option:hover:not(.locked) {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--ink);
+    background: #fff;
+  }
+
+  .option .letter {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .option.selected {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .option.selected .letter {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .option.correct {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+
+  .option.correct .letter {
+    background: #fff;
+    color: var(--green);
+  }
+
+  .option.incorrect {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .option.incorrect .letter {
+    background: #fff;
+    color: var(--accent);
+  }
+
+  .option.locked {
+    cursor: default;
+  }
+
+  .quiz-feedback {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 6px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    display: none;
+  }
+
+  .quiz-feedback.show { display: block; }
+
+  .quiz-feedback.right {
+    background: rgba(90, 122, 62, 0.12);
+    border-left: 4px solid var(--green);
+  }
+
+  .quiz-feedback.right b { color: var(--green); }
+
+  .quiz-feedback.wrong {
+    background: rgba(198, 74, 63, 0.1);
+    border-left: 4px solid var(--accent);
+  }
+
+  .quiz-feedback.wrong b { color: var(--accent); }
+
+  .quiz-submit {
+    margin-top: 16px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 12px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .quiz-submit:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--accent);
+  }
+
+  .quiz-submit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ===== FOOTER NAV ===== */
+  footer.nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 4px 18px;
+    border-top: 2px solid var(--ink);
+    gap: 20px;
+  }
+
+  .nav-btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 12px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: var(--accent);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    max-width: 600px;
+    height: 8px;
+    background: var(--paper-deep);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .slide-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .slide-counter .current {
+    font-size: 18px;
+    color: var(--accent);
+  }
+
+  /* ===== FINAL RESULTS ===== */
+  .results-hero {
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .results-score {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: clamp(80px, 14vw, 140px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin: 20px 0;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .results-fraction {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .results-grade {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 999px;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+
+  .results-msg {
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 60ch;
+    margin: 0 auto 30px;
+    color: var(--ink);
+  }
+
+  .results-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .breakdown {
+    margin-top: 30px;
+    text-align: left;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .breakdown h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .bk-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .bk-item .topic { font-weight: 500; }
+
+  .bk-item .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .bk-item .status.ok { background: var(--green); color: #fff; }
+  .bk-item .status.no { background: var(--accent); color: #fff; }
+  .bk-item .status.pending { background: var(--paper-deep); color: var(--muted); }
+
+  /* Decorative */
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .app { padding: 0 16px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .slide-title { font-size: 32px; }
+    .progress-meta { font-size: 11px; gap: 10px; }
+    .brand-sub { display: none; }
+    .nav-btn { padding: 10px 16px; font-size: 11px; }
+    pre.code { font-size: 11.5px; padding: 14px; }
+    .quiz { padding: 20px; }
+    .quiz::before { width: 40px; height: 40px; font-size: 20px; top: -18px; left: -18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ HEADER ============ -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">Unidad 3<span class="dot">.</span></div>
+      <div class="brand-sub">POE · UX · GUI · Excepciones</div>
+    </div>
+    <div class="progress-meta">
+      <span id="topicLabel">Introducción</span>
+      <span class="score-pill">Puntos <span class="num" id="scoreNum">0</span>/<span id="scoreTotal">10</span></span>
+    </div>
+  </header>
+
+  <!-- ============ SLIDES ============ -->
+  <main class="slide-area" id="slideArea">
+
+    <!-- ===== SLIDE 0: Portada ===== -->
+    <section class="slide active" data-topic="Introducción">
+      <div style="display:flex; flex-direction:column; justify-content:center; min-height:100%; padding:20px 0;">
+        <div class="slide-tag">Programación II · Facultad de Ingeniería UAEMéx</div>
+        <h1 class="slide-title">
+          Eventos, experiencia<br>
+          y la <span class="accent">forma</span> de las<br>
+          interfaces.
+        </h1>
+        <p class="slide-subtitle">Un recorrido por la programación orientada a eventos, el diseño UX, las GUI en Tkinter y el manejo de excepciones.</p>
+        <p class="text" style="font-size:16px; max-width:62ch;">Esta presentación te guiará a través de los cuatro grandes temas de la unidad. Al terminar cada bloque encontrarás una pregunta que pondrá a prueba lo que aprendiste. Al final verás tu calificación obtenida.</p>
+        <div class="note" style="margin-top:30px;">
+          <b>Cómo usar esta presentación</b>
+          Usa los botones <i>Anterior</i> y <i>Siguiente</i>, o las flechas ← → del teclado, para navegar entre las diapositivas. Las preguntas suman 1 punto cada una. Hay 10 preguntas en total.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 1: 3.1 POE intro ===== -->
+    <section class="slide" data-topic="3.1 POE">
+      <div class="slide-tag">3.1 · Programación orientada a eventos</div>
+      <h1 class="slide-title">El programa <span class="accent">espera</span>, no actúa.</h1>
+      <p class="lead">En la programación orientada a eventos (POE) el flujo no avanza línea por línea: avanza cuando <b>ocurre algo</b>. Un clic, una tecla, un temporizador, un mensaje del sistema.</p>
+
+      <h3 class="section">Componentes esenciales</h3>
+      <ul class="bullets">
+        <li><b>Evento:</b> hecho observable durante la ejecución (un clic, una tecla).</li>
+        <li><b>Fuente de evento:</b> objeto que lo produce (botón, ventana, sensor).</li>
+        <li><b>Manejador o callback:</b> función que se ejecuta como respuesta.</li>
+        <li><b>Bucle de eventos:</b> ciclo continuo que detecta y despacha.</li>
+        <li><b>Cola de eventos:</b> estructura donde se almacenan los eventos pendientes.</li>
+      </ul>
+
+      <table class="tbl">
+        <thead><tr><th>Modelo secuencial</th><th>Orientado a eventos</th></tr></thead>
+        <tbody>
+          <tr><td>Flujo lo decide el código.</td><td>Flujo lo deciden las acciones del usuario.</td></tr>
+          <tr><td>Termina al ejecutar la última línea.</td><td>Vive hasta que se cierre la ventana.</td></tr>
+          <tr><td>Útil para cálculo y lotes.</td><td>Útil para interfaces interactivas.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== SLIDE 2: POE ejemplo ===== -->
+    <section class="slide" data-topic="3.1 POE">
+      <div class="slide-tag">3.1 · Ejemplo en Tkinter</div>
+      <h1 class="slide-title">Un botón, una <span class="accent">función</span>.</h1>
+      <p class="text">La biblioteca estándar <code style="font-family:'JetBrains Mono',monospace; background:var(--paper-deep); padding:2px 6px; border-radius:3px;">tkinter</code> de Python implementa el paradigma orientado a eventos. Observa que la función <b>saludar</b> no se invoca con paréntesis al asignarla a <b>command</b>: se está pasando la <i>referencia</i> a la función, no su resultado.</p>
+
+      <pre class="code"><span class="com"># archivo: evento_basico.py</span>
+<span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+<span class="kw">def</span> <span class="fn">saludar</span>():
+    <span class="fn">print</span>(<span class="str">"¡Hola! Se ha presionado el botón."</span>)
+
+ventana = tk.<span class="fn">Tk</span>()
+ventana.<span class="fn">title</span>(<span class="str">"Primer evento"</span>)
+ventana.<span class="fn">geometry</span>(<span class="str">"300x150"</span>)
+
+boton = tk.<span class="fn">Button</span>(ventana, text=<span class="str">"Salúdame"</span>, command=saludar)
+boton.<span class="fn">pack</span>(pady=<span class="num">40</span>)
+
+ventana.<span class="fn">mainloop</span>()</pre>
+
+      <div class="note">
+        <b>mainloop()</b>
+        Esta llamada inicia el bucle de eventos. A partir de ese momento Python deja de ejecutar línea por línea y se queda <i>escuchando</i>: cuando ocurre un evento, ejecuta su manejador y vuelve a escuchar.
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 3: QUIZ 1 ===== -->
+    <section class="slide" data-topic="3.1 POE">
+      <div class="slide-tag">Pregunta 1 de 10 · POE</div>
+      <h1 class="slide-title">Comprueba lo aprendido.</h1>
+
+      <div class="quiz" data-q="0" data-correct="1">
+        <div class="quiz-label">Programación orientada a eventos</div>
+        <div class="quiz-question">¿Por qué al asignar una función al parámetro <code>command</code> de un botón NO se escriben los paréntesis al final del nombre?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div>Porque los paréntesis son opcionales en Python al llamar a una función.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div>Porque se debe pasar la referencia a la función para que Tkinter la invoque cuando ocurra el evento, no el resultado de ejecutarla ahora.</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div>Porque las funciones sin argumentos no usan paréntesis en Python.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>Porque Tkinter no acepta funciones, solo cadenas de texto con el nombre.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 4: bind() ===== -->
+    <section class="slide" data-topic="3.1 POE">
+      <div class="slide-tag">3.1 · El método bind()</div>
+      <h1 class="slide-title">Más allá del <span class="accent">clic</span>.</h1>
+      <p class="text">El parámetro <b>command</b> solo cubre el clic principal. Para reaccionar a otros eventos —teclas, doble clic, movimiento del ratón, foco— Tkinter ofrece el método <b>bind()</b>, que vincula un evento concreto con una función manejadora.</p>
+
+      <pre class="code"><span class="kw">def</span> <span class="fn">al_presionar_tecla</span>(evento):
+    <span class="fn">print</span>(<span class="str">f"Tecla: {evento.keysym}"</span>)
+
+ventana.<span class="fn">bind</span>(<span class="str">"&lt;Key&gt;"</span>, al_presionar_tecla)
+ventana.<span class="fn">bind</span>(<span class="str">"&lt;Double-Button-1&gt;"</span>, al_hacer_doble_clic)</pre>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>Eventos de ratón</h4>
+          <p><b>&lt;Button-1&gt;</b> clic izquierdo<br>
+          <b>&lt;Button-3&gt;</b> clic derecho<br>
+          <b>&lt;Double-Button-1&gt;</b> doble clic<br>
+          <b>&lt;Motion&gt;</b> movimiento del puntero</p>
+        </div>
+        <div class="card teal">
+          <h4>Eventos de teclado y foco</h4>
+          <p><b>&lt;Key&gt;</b> cualquier tecla<br>
+          <b>&lt;Return&gt;</b> tecla Enter<br>
+          <b>&lt;FocusIn&gt;</b> el widget gana foco<br>
+          <b>&lt;FocusOut&gt;</b> el widget pierde foco</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 5: QUIZ 2 ===== -->
+    <section class="slide" data-topic="3.1 POE">
+      <div class="slide-tag">Pregunta 2 de 10 · POE</div>
+      <h1 class="slide-title">¿Qué evento usarías?</h1>
+
+      <div class="quiz" data-q="1" data-correct="2">
+        <div class="quiz-label">Eventos de Tkinter</div>
+        <div class="quiz-question">Necesitas que tu aplicación reaccione cuando el usuario presione específicamente la tecla <i>Enter</i> dentro de un campo de texto. ¿Qué identificador de evento debes pasar a <code>bind()</code>?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div><code>&lt;Button-1&gt;</code></div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div><code>&lt;Motion&gt;</code></div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div><code>&lt;Return&gt;</code></div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div><code>&lt;FocusOut&gt;</code></div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 6: UX intro ===== -->
+    <section class="slide" data-topic="3.2 UX">
+      <div class="slide-tag">3.2 · Experiencia de Usuario</div>
+      <h1 class="slide-title">No es lo que <span class="accent">se ve</span>: es lo que <span class="accent">se vive</span>.</h1>
+      <p class="lead">La <b>Experiencia de Usuario (UX)</b> es el conjunto de percepciones, emociones y respuestas que una persona experimenta al usar un producto. La UI es el aspecto visual; la UX es todo lo demás.</p>
+
+      <h3 class="section">Los siete pilares de la UX</h3>
+      <div class="grid-2">
+        <div class="card"><h4>Utilidad</h4><p>Resuelve una necesidad real.</p></div>
+        <div class="card teal"><h4>Usabilidad</h4><p>Fácil de aprender y eficiente.</p></div>
+        <div class="card"><h4>Accesibilidad</h4><p>Personas con distintas capacidades pueden usarlo.</p></div>
+        <div class="card teal"><h4>Deseabilidad</h4><p>Genera respuesta emocional positiva.</p></div>
+        <div class="card"><h4>Encontrabilidad</h4><p>Las funciones son fáciles de localizar.</p></div>
+        <div class="card teal"><h4>Credibilidad</h4><p>El usuario confía en el sistema.</p></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 7: Proceso UX ===== -->
+    <section class="slide" data-topic="3.2 UX">
+      <div class="slide-tag">3.2.1 · Proceso de diseño UX</div>
+      <h1 class="slide-title">Un ciclo, no una <span class="accent">línea</span>.</h1>
+      <p class="text">El diseño UX es un proceso iterativo centrado en el usuario. Distintos modelos (Design Thinking, Doble Diamante, ISO 9241-210) coinciden en seis etapas esenciales que se repiten en ciclos.</p>
+
+      <table class="tbl">
+        <thead><tr><th style="width:30%;">Etapa</th><th>Qué se hace</th></tr></thead>
+        <tbody>
+          <tr><td>1. Investigación</td><td>Comprender a los usuarios mediante entrevistas, observación, encuestas.</td></tr>
+          <tr><td>2. Definición</td><td>Sintetizar hallazgos en personas, mapas de empatía, escenarios.</td></tr>
+          <tr><td>3. Ideación</td><td>Generar muchas posibles soluciones (brainstorming, sketching).</td></tr>
+          <tr><td>4. Prototipado</td><td>Convertir ideas en wireframes y maquetas tangibles.</td></tr>
+          <tr><td>5. Evaluación</td><td>Probar con usuarios reales y detectar problemas.</td></tr>
+          <tr><td>6. Implementación</td><td>Construir el producto y reiniciar el ciclo con lo aprendido.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <b>Iteración constante</b>
+        Las etapas no son lineales. Durante la evaluación pueden descubrirse nuevos requisitos que obliguen a regresar a la investigación. La iteración es esencial.
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 8: QUIZ 3 ===== -->
+    <section class="slide" data-topic="3.2 UX">
+      <div class="slide-tag">Pregunta 3 de 10 · UX</div>
+      <h1 class="slide-title">UI no es UX.</h1>
+
+      <div class="quiz" data-q="2" data-correct="1">
+        <div class="quiz-label">Conceptos fundamentales</div>
+        <div class="quiz-question">¿Cuál de las siguientes afirmaciones describe correctamente la diferencia entre UX y UI?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div>UX y UI son sinónimos; ambos se refieren al aspecto visual de la interfaz.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div>La UI se refiere al aspecto visual y elementos de interacción, mientras que la UX abarca la experiencia completa del usuario, incluida utilidad y contexto de uso.</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div>La UX se ocupa únicamente del código del backend y la UI únicamente del frontend.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>La UI es para aplicaciones móviles y la UX para aplicaciones de escritorio.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 9: Análisis UX ===== -->
+    <section class="slide" data-topic="3.2 UX">
+      <div class="slide-tag">3.2.2 · Análisis UX</div>
+      <h1 class="slide-title">Las 10 heurísticas de <span class="accent">Nielsen</span>.</h1>
+      <p class="text">El análisis UX es el puente entre escuchar a los usuarios y diseñar soluciones. Una de sus herramientas más usadas es la evaluación heurística basada en los 10 principios de Jakob Nielsen.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>Heurísticas 1-5</h4>
+          <p>1. Visibilidad del estado del sistema<br>
+          2. Coincidencia con el mundo real<br>
+          3. Control y libertad del usuario<br>
+          4. Consistencia y estándares<br>
+          5. Prevención de errores</p>
+        </div>
+        <div class="card teal">
+          <h4>Heurísticas 6-10</h4>
+          <p>6. Reconocer antes que recordar<br>
+          7. Flexibilidad y eficiencia<br>
+          8. Diseño estético y minimalista<br>
+          9. Recuperación de errores<br>
+          10. Ayuda y documentación</p>
+        </div>
+      </div>
+
+      <h3 class="section">Otras técnicas frecuentes</h3>
+      <ul class="bullets">
+        <li><b>Personas:</b> perfiles ficticios pero realistas de los usuarios.</li>
+        <li><b>Mapas de empatía:</b> qué piensa, siente, dice y hace el usuario.</li>
+        <li><b>Customer Journey Map:</b> etapas, emociones y puntos de contacto.</li>
+        <li><b>Pruebas de usabilidad:</b> observar a usuarios reales completando tareas.</li>
+      </ul>
+    </section>
+
+    <!-- ===== SLIDE 10: QUIZ 4 ===== -->
+    <section class="slide" data-topic="3.2 UX">
+      <div class="slide-tag">Pregunta 4 de 10 · UX</div>
+      <h1 class="slide-title">Identifica la heurística.</h1>
+
+      <div class="quiz" data-q="3" data-correct="2">
+        <div class="quiz-label">Heurísticas de Nielsen</div>
+        <div class="quiz-question">Una calculadora muestra el mensaje <i>"Calculando..."</i> mientras procesa una operación larga, en lugar de quedarse en silencio. ¿Qué heurística de Nielsen está aplicando principalmente?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div>Diseño estético y minimalista.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div>Reconocer antes que recordar.</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div>Visibilidad del estado del sistema.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>Flexibilidad y eficiencia de uso.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 11: GUI intro ===== -->
+    <section class="slide" data-topic="3.3 GUI">
+      <div class="slide-tag">3.3 · Interfaz gráfica de usuario</div>
+      <h1 class="slide-title">De la línea de comandos a la <span class="accent">ventana</span>.</h1>
+      <p class="lead">Una <b>GUI (Graphical User Interface)</b> es el conjunto de elementos visuales que permite interactuar con un programa mediante ventanas, botones e iconos, en contraposición a la CLI, donde la interacción se hace con texto.</p>
+
+      <h3 class="section">Componentes habituales</h3>
+      <ul class="bullets">
+        <li><b>Ventanas:</b> contenedores principales de la aplicación.</li>
+        <li><b>Widgets:</b> etiquetas, botones, cajas de texto, listas, menús.</li>
+        <li><b>Contenedores:</b> frames que agrupan visualmente otros widgets.</li>
+        <li><b>Gestores de geometría:</b> organizan los widgets en la ventana.</li>
+        <li><b>Diálogos:</b> ventanas auxiliares para entrada o confirmación.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bibliotecas Python para GUI</b>
+        Tkinter (estándar, multiplataforma), PyQt (potente y profesional), Kivy (orientada a táctil y multitoque) y wxPython (apariencia nativa). En este curso usamos <b>Tkinter</b> por venir incluida en Python.
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 12: Tkinter widgets ===== -->
+    <section class="slide" data-topic="3.3 GUI">
+      <div class="slide-tag">3.3.1 · Tkinter en práctica</div>
+      <h1 class="slide-title">Widgets y <span class="accent">gestores</span> de geometría.</h1>
+
+      <table class="tbl">
+        <thead><tr><th style="width:25%;">Widget</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td>Label</td><td>Muestra texto o imágenes estáticas.</td></tr>
+          <tr><td>Button</td><td>Botón que ejecuta una función al hacerse clic.</td></tr>
+          <tr><td>Entry</td><td>Campo de texto de una sola línea.</td></tr>
+          <tr><td>Text</td><td>Cuadro de texto multilínea.</td></tr>
+          <tr><td>Checkbutton</td><td>Casilla de verificación.</td></tr>
+          <tr><td>Listbox</td><td>Lista de elementos seleccionables.</td></tr>
+          <tr><td>Frame</td><td>Contenedor para agrupar widgets.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="section">Los tres gestores de geometría</h3>
+      <div class="grid-2">
+        <div class="card">
+          <h4>pack()</h4>
+          <p>Apila los widgets en una dirección (arriba, abajo, izquierda, derecha). Sencillo, para diseños lineales.</p>
+        </div>
+        <div class="card teal">
+          <h4>grid()</h4>
+          <p>Cuadrícula de filas y columnas. Ideal para formularios y diseños tabulares.</p>
+        </div>
+      </div>
+      <div class="note">
+        <b>place()</b>
+        Posicionamiento por coordenadas absolutas. Útil en casos puntuales. <b>Nunca mezcles pack() y grid() en el mismo contenedor:</b> provoca conflictos. Si necesitas combinar disposiciones, usa Frames distintos.
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 13: Tkinter ejemplo ===== -->
+    <section class="slide" data-topic="3.3 GUI">
+      <div class="slide-tag">3.3.1 · Formulario con grid</div>
+      <h1 class="slide-title">Un formulario <span class="accent">funcional</span>.</h1>
+
+      <pre class="code"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+<span class="kw">from</span> tkinter <span class="kw">import</span> messagebox
+
+<span class="kw">def</span> <span class="fn">registrar</span>():
+    nombre = entrada_nombre.<span class="fn">get</span>()
+    edad = entrada_edad.<span class="fn">get</span>()
+    <span class="kw">if</span> nombre == <span class="str">""</span> <span class="kw">or</span> edad == <span class="str">""</span>:
+        messagebox.<span class="fn">showwarning</span>(<span class="str">"Campos vacíos"</span>,
+                               <span class="str">"Por favor completa todos los campos."</span>)
+        <span class="kw">return</span>
+    messagebox.<span class="fn">showinfo</span>(<span class="str">"Registro exitoso"</span>,
+                        <span class="str">f"Bienvenido(a) {nombre}, tienes {edad} años."</span>)
+
+ventana = tk.<span class="fn">Tk</span>()
+ventana.<span class="fn">title</span>(<span class="str">"Registro"</span>)
+
+tk.<span class="fn">Label</span>(ventana, text=<span class="str">"Nombre:"</span>).<span class="fn">grid</span>(row=<span class="num">0</span>, column=<span class="num">0</span>, padx=<span class="num">10</span>, pady=<span class="num">10</span>)
+entrada_nombre = tk.<span class="fn">Entry</span>(ventana)
+entrada_nombre.<span class="fn">grid</span>(row=<span class="num">0</span>, column=<span class="num">1</span>)
+
+tk.<span class="fn">Button</span>(ventana, text=<span class="str">"Registrar"</span>, command=registrar)\
+    .<span class="fn">grid</span>(row=<span class="num">2</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, pady=<span class="num">20</span>)
+
+ventana.<span class="fn">mainloop</span>()</pre>
+    </section>
+
+    <!-- ===== SLIDE 14: QUIZ 5 ===== -->
+    <section class="slide" data-topic="3.3 GUI">
+      <div class="slide-tag">Pregunta 5 de 10 · GUI</div>
+      <h1 class="slide-title">Elige el gestor adecuado.</h1>
+
+      <div class="quiz" data-q="4" data-correct="1">
+        <div class="quiz-label">Gestores de geometría</div>
+        <div class="quiz-question">Vas a construir un formulario de registro con etiquetas a la izquierda y campos de texto a la derecha, organizados en varias filas. ¿Qué gestor de geometría es el más apropiado?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div><code>pack()</code> porque permite apilar verticalmente.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div><code>grid()</code> porque organiza los widgets en filas y columnas, ideal para formularios.</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div><code>place()</code> porque permite controlar cada píxel exactamente.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>Combinar <code>pack()</code> y <code>grid()</code> en el mismo contenedor.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 15: QUIZ 6 ===== -->
+    <section class="slide" data-topic="3.3 GUI">
+      <div class="slide-tag">Pregunta 6 de 10 · GUI</div>
+      <h1 class="slide-title">¿Qué widget eliges?</h1>
+
+      <div class="quiz" data-q="5" data-correct="0">
+        <div class="quiz-label">Widgets de Tkinter</div>
+        <div class="quiz-question">Necesitas que el usuario escriba una sola línea de texto (su nombre) en tu interfaz. ¿Qué widget de Tkinter es el más adecuado?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div><code>Entry</code></div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div><code>Label</code></div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div><code>Text</code> con altura fijada a 1.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div><code>Listbox</code></div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 16: Excepciones intro ===== -->
+    <section class="slide" data-topic="3.4 Excepciones">
+      <div class="slide-tag">3.4 · Manejo de excepciones</div>
+      <h1 class="slide-title">Cuando algo <span class="accent">sale mal</span>.</h1>
+      <p class="lead">Un programa robusto no es el que nunca falla, sino el que sabe qué hacer cuando algo falla. Python distingue tres tipos de errores:</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>Errores de sintaxis</h4>
+          <p>El código no cumple las reglas del lenguaje. El intérprete los detecta antes de ejecutar.</p>
+        </div>
+        <div class="card teal">
+          <h4>Errores lógicos</h4>
+          <p>El programa se ejecuta sin fallos pero produce resultados incorrectos. Solo se detectan con pruebas.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px; border-color:var(--accent); box-shadow: 4px 4px 0 var(--accent);">
+        <h4 style="color:var(--accent);">Excepciones (errores en tiempo de ejecución)</h4>
+        <p>El código es válido pero algo falla durante la ejecución: división entre cero, archivo inexistente, conversión inválida. Son el foco de este tema.</p>
+      </div>
+
+      <h3 class="section">Excepciones comunes</h3>
+      <table class="tbl">
+        <thead><tr><th style="width:35%;">Excepción</th><th>Cuándo se produce</th></tr></thead>
+        <tbody>
+          <tr><td>ZeroDivisionError</td><td>División entre cero.</td></tr>
+          <tr><td>ValueError</td><td>Conversión inválida (p. ej. <code>int("hola")</code>).</td></tr>
+          <tr><td>TypeError</td><td>Operación entre tipos incompatibles.</td></tr>
+          <tr><td>IndexError</td><td>Índice fuera del rango de una lista.</td></tr>
+          <tr><td>FileNotFoundError</td><td>Archivo que no existe.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== SLIDE 17: try except ===== -->
+    <section class="slide" data-topic="3.4 Excepciones">
+      <div class="slide-tag">3.4 · try / except / else / finally</div>
+      <h1 class="slide-title">Atrapa, responde, <span class="accent">continúa</span>.</h1>
+
+      <pre class="code"><span class="kw">try</span>:
+    <span class="com"># Bloque donde puede ocurrir una excepción</span>
+    numero = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Introduce un número: "</span>))
+    resultado = <span class="num">10</span> / numero
+<span class="kw">except</span> ZeroDivisionError:
+    <span class="fn">print</span>(<span class="str">"No se puede dividir entre cero."</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"El dato no es un número válido."</span>)
+<span class="kw">except</span> Exception <span class="kw">as</span> e:
+    <span class="fn">print</span>(<span class="str">f"Error inesperado: {e}"</span>)
+<span class="kw">else</span>:
+    <span class="com"># Solo si NO hubo excepción</span>
+    <span class="fn">print</span>(<span class="str">f"Resultado: {resultado}"</span>)
+<span class="kw">finally</span>:
+    <span class="com"># Se ejecuta SIEMPRE</span>
+    <span class="fn">print</span>(<span class="str">"Fin del intento."</span>)</pre>
+
+      <h3 class="section">Buenas prácticas</h3>
+      <ul class="bullets">
+        <li>Captura excepciones <b>específicas</b> antes que <b>genéricas</b>.</li>
+        <li>Evita <code>except:</code> sin tipo: oculta errores reales.</li>
+        <li>En el <b>try</b> solo el código que realmente puede fallar.</li>
+        <li>Usa <b>finally</b> para liberar recursos (cerrar archivos, conexiones).</li>
+      </ul>
+    </section>
+
+    <!-- ===== SLIDE 18: QUIZ 7 ===== -->
+    <section class="slide" data-topic="3.4 Excepciones">
+      <div class="slide-tag">Pregunta 7 de 10 · Excepciones</div>
+      <h1 class="slide-title">Identifica la excepción.</h1>
+
+      <div class="quiz" data-q="6" data-correct="0">
+        <div class="quiz-label">Tipos de excepciones</div>
+        <div class="quiz-question">El usuario escribe <i>"hola"</i> en un campo donde se esperaba un número entero, y tu programa intenta convertirlo con <code>int("hola")</code>. ¿Qué excepción se lanzará?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div><code>ValueError</code></div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div><code>ZeroDivisionError</code></div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div><code>TypeError</code></div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div><code>FileNotFoundError</code></div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 19: QUIZ 8 ===== -->
+    <section class="slide" data-topic="3.4 Excepciones">
+      <div class="slide-tag">Pregunta 8 de 10 · Excepciones</div>
+      <h1 class="slide-title">El bloque <i>finally</i>.</h1>
+
+      <div class="quiz" data-q="7" data-correct="2">
+        <div class="quiz-label">Estructura try/except/else/finally</div>
+        <div class="quiz-question">¿En qué situación se ejecuta el código del bloque <code>finally</code>?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div>Solo cuando ocurre una excepción.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div>Solo cuando NO ocurre ninguna excepción.</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div>Siempre, haya o no ocurrido una excepción.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>Únicamente cuando se captura <code>Exception</code> genérica.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 20: Pruebas ===== -->
+    <section class="slide" data-topic="3.4 Pruebas">
+      <div class="slide-tag">3.4 · Pruebas unitarias</div>
+      <h1 class="slide-title">Verificar antes de <span class="accent">entregar</span>.</h1>
+      <p class="text">Las pruebas verifican que el programa cumpla los requisitos. Existen varios niveles: <b>unitarias</b> (unidades pequeñas), <b>integración</b> (varios módulos), <b>sistema</b> (programa completo) y <b>aceptación</b> (las realiza el cliente).</p>
+
+      <h3 class="section">unittest: pruebas con la biblioteca estándar</h3>
+
+      <pre class="code"><span class="com"># archivo: test_operaciones.py</span>
+<span class="kw">import</span> unittest
+<span class="kw">from</span> operaciones <span class="kw">import</span> sumar, dividir
+
+<span class="kw">class</span> <span class="fn">PruebasOperaciones</span>(unittest.TestCase):
+
+    <span class="kw">def</span> <span class="fn">test_sumar_enteros</span>(self):
+        self.<span class="fn">assertEqual</span>(<span class="fn">sumar</span>(<span class="num">2</span>, <span class="num">3</span>), <span class="num">5</span>)
+
+    <span class="kw">def</span> <span class="fn">test_dividir_entre_cero</span>(self):
+        <span class="kw">with</span> self.<span class="fn">assertRaises</span>(ZeroDivisionError):
+            <span class="fn">dividir</span>(<span class="num">10</span>, <span class="num">0</span>)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    unittest.<span class="fn">main</span>()</pre>
+
+      <div class="note">
+        <b>Métodos assert más usados</b>
+        <code>assertEqual(a, b)</code> verifica igualdad · <code>assertTrue/False(x)</code> evalúa condiciones · <code>assertAlmostEqual</code> compara reales con tolerancia · <code>assertRaises</code> verifica excepciones · <code>assertIn</code> comprueba pertenencia.
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 21: QUIZ 9 ===== -->
+    <section class="slide" data-topic="3.4 Pruebas">
+      <div class="slide-tag">Pregunta 9 de 10 · Pruebas</div>
+      <h1 class="slide-title">Verifica una excepción.</h1>
+
+      <div class="quiz" data-q="8" data-correct="3">
+        <div class="quiz-label">unittest</div>
+        <div class="quiz-question">Quieres escribir una prueba que verifique que la función <code>dividir(10, 0)</code> efectivamente lanza una excepción <code>ZeroDivisionError</code>. ¿Qué método de unittest debes usar?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div><code>assertEqual</code></div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div><code>assertTrue</code></div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div><code>assertIn</code></div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div><code>assertRaises</code></div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 22: QUIZ 10 (integradora) ===== -->
+    <section class="slide" data-topic="Integradora">
+      <div class="slide-tag">Pregunta 10 de 10 · Integradora</div>
+      <h1 class="slide-title">Conecta los <span class="accent">conceptos</span>.</h1>
+
+      <div class="quiz" data-q="9" data-correct="1">
+        <div class="quiz-label">Visión integradora</div>
+        <div class="quiz-question">En una calculadora con GUI, cuando el usuario introduce una expresión inválida, esta muestra un mensaje claro en pantalla en lugar de cerrarse abruptamente. ¿Qué combinación de conceptos de esta unidad está aplicando?</div>
+        <div class="options">
+          <div class="option" data-i="0"><div class="letter">A</div><div>Solo manejo de excepciones, nada más.</div></div>
+          <div class="option" data-i="1"><div class="letter">B</div><div>Manejo de excepciones (try/except) más la heurística UX de "ayudar a los usuarios a recuperarse de errores".</div></div>
+          <div class="option" data-i="2"><div class="letter">C</div><div>Pruebas unitarias con assertRaises únicamente.</div></div>
+          <div class="option" data-i="3"><div class="letter">D</div><div>Eventos de teclado únicamente, sin manejo de errores.</div></div>
+        </div>
+        <button class="quiz-submit" disabled>Comprobar respuesta</button>
+        <div class="quiz-feedback"></div>
+      </div>
+    </section>
+
+    <!-- ===== SLIDE 23: RESULTS ===== -->
+    <section class="slide" data-topic="Resultados">
+      <div class="results-hero">
+        <div class="slide-tag">Resultados finales</div>
+        <h1 class="slide-title" style="font-size:42px; margin-top:10px;">Tu calificación.</h1>
+        <div class="results-score" id="finalScore">0</div>
+        <div class="results-fraction"><span id="finalRight">0</span> aciertos de <span id="finalTotal">10</span> preguntas</div>
+        <div class="results-grade" id="finalGrade">—</div>
+        <p class="results-msg" id="finalMsg">Completa todas las preguntas para ver tu resultado.</p>
+        <div class="results-actions">
+          <button class="nav-btn" id="restartBtn">↻ Reiniciar quiz</button>
+          <button class="nav-btn" id="reviewBtn" style="background:var(--teal);">Revisar respuestas</button>
+        </div>
+
+        <div class="breakdown" id="breakdown">
+          <h4>Desglose por pregunta</h4>
+          <div id="breakdownList"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER NAV ============ -->
+  <footer class="nav-bar">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="slide-counter">
+      <span class="current" id="currentSlide">1</span> / <span id="totalSlides">24</span>
+    </div>
+    <button class="nav-btn" id="nextBtn">Siguiente →</button>
+  </footer>
+
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressBar = document.getElementById('progressBar');
+  const currentSlideEl = document.getElementById('currentSlide');
+  const totalSlidesEl = document.getElementById('totalSlides');
+  const topicLabel = document.getElementById('topicLabel');
+  const scoreNum = document.getElementById('scoreNum');
+  const scoreTotal = document.getElementById('scoreTotal');
+
+  const TOTAL_QUESTIONS = 10;
+  let current = 0;
+  // answers[i] = { selected: index, correct: bool } | null
+  const answers = new Array(TOTAL_QUESTIONS).fill(null);
+
+  totalSlidesEl.textContent = totalSlides;
+  scoreTotal.textContent = TOTAL_QUESTIONS;
+
+  function updateProgress() {
+    const pct = ((current + 1) / totalSlides) * 100;
+    progressBar.style.width = pct + '%';
+    currentSlideEl.textContent = current + 1;
+    const slide = slides[current];
+    topicLabel.textContent = slide.dataset.topic || '';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === totalSlides - 1;
+
+    // Si llegamos a la última slide, actualizar resultados
+    if (current === totalSlides - 1) {
+      renderResults();
+    }
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= totalSlides) return;
+    slides[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    // scroll al inicio de la slide
+    slides[current].scrollTop = 0;
+    updateProgress();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight') goTo(current + 1);
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+  });
+
+  // ===== Quiz logic =====
+  document.querySelectorAll('.quiz').forEach(quiz => {
+    const qIndex = parseInt(quiz.dataset.q);
+    const correctIndex = parseInt(quiz.dataset.correct);
+    const options = quiz.querySelectorAll('.option');
+    const submit = quiz.querySelector('.quiz-submit');
+    const feedback = quiz.querySelector('.quiz-feedback');
+    let selected = -1;
+
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (opt.classList.contains('locked')) return;
+        if (answers[qIndex] !== null) return; // ya respondida
+        options.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        selected = parseInt(opt.dataset.i);
+        submit.disabled = false;
+      });
+    });
+
+    submit.addEventListener('click', () => {
+      if (selected === -1) return;
+      if (answers[qIndex] !== null) return;
+
+      const isCorrect = selected === correctIndex;
+      answers[qIndex] = { selected, correct: isCorrect };
+
+      options.forEach(o => {
+        o.classList.add('locked');
+        o.classList.remove('selected');
+        const i = parseInt(o.dataset.i);
+        if (i === correctIndex) o.classList.add('correct');
+        else if (i === selected) o.classList.add('incorrect');
+      });
+
+      submit.disabled = true;
+      submit.textContent = '✓ Respondida';
+
+      feedback.classList.add('show');
+      const explanations = getExplanation(qIndex, isCorrect);
+      feedback.classList.add(isCorrect ? 'right' : 'wrong');
+      feedback.innerHTML = `<b>${isCorrect ? '¡Correcto!' : 'Respuesta incorrecta.'}</b> ${explanations}`;
+
+      updateScore();
+    });
+  });
+
+  function getExplanation(qIndex, isCorrect) {
+    const exps = [
+      "Al pasar la función sin paréntesis (<code>command=saludar</code>) se pasa la <i>referencia</i>. Si se escribiera <code>command=saludar()</code>, Python ejecutaría la función inmediatamente y pasaría su resultado (<code>None</code>) a command.",
+      "El evento <code>&lt;Return&gt;</code> identifica específicamente la tecla Enter. <code>&lt;Key&gt;</code> capturaría cualquier tecla.",
+      "La UI es solo la capa visual e interactiva; la UX engloba la experiencia completa: utilidad, usabilidad, accesibilidad, contexto de uso y satisfacción.",
+      "Mostrar al usuario qué está sucediendo en cada momento es justamente la heurística 1 de Nielsen: <i>Visibilidad del estado del sistema</i>.",
+      "<code>grid()</code> organiza widgets en filas y columnas, lo cual encaja perfectamente con la estructura de un formulario. Recuerda no mezclar gestores en el mismo contenedor.",
+      "<code>Entry</code> está diseñado precisamente para entrada de texto de una sola línea. <code>Text</code> es multilínea y <code>Label</code> es solo de salida.",
+      "<code>ValueError</code> se lanza cuando una función recibe un argumento del tipo correcto pero con un valor inválido, como una cadena que no representa un número.",
+      "El bloque <code>finally</code> se ejecuta SIEMPRE, ocurra o no una excepción. Por eso es ideal para liberar recursos.",
+      "<code>assertRaises</code> se usa con <code>with</code> para verificar que un bloque de código lanza una excepción concreta.",
+      "Una buena aplicación combina <b>técnica</b> (try/except impide el cierre) y <b>diseño</b> (mensaje claro al usuario), tal como propone la heurística 9 de Nielsen."
+    ];
+    return exps[qIndex] || '';
+  }
+
+  function updateScore() {
+    const score = answers.filter(a => a && a.correct).length;
+    scoreNum.textContent = score;
+  }
+
+  // ===== Results =====
+  function renderResults() {
+    const answered = answers.filter(a => a !== null).length;
+    const correct = answers.filter(a => a && a.correct).length;
+    const score10 = Math.round((correct / TOTAL_QUESTIONS) * 100) / 10; // de 0.0 a 10.0
+    const score100 = Math.round((correct / TOTAL_QUESTIONS) * 100);
+
+    document.getElementById('finalScore').textContent = score10.toFixed(1);
+    document.getElementById('finalRight').textContent = correct;
+    document.getElementById('finalTotal').textContent = TOTAL_QUESTIONS;
+
+    let grade, msg;
+    if (answered < TOTAL_QUESTIONS) {
+      grade = 'Incompleto';
+      msg = `Aún tienes ${TOTAL_QUESTIONS - answered} pregunta(s) sin responder. Regresa a las diapositivas marcadas con "?" para completarlas y obtener tu calificación final.`;
+    } else if (score100 === 100) {
+      grade = 'Excelente';
+      msg = '¡Felicidades! Dominas los cuatro temas de la unidad. Estás listo(a) para el proyecto integrador.';
+    } else if (score100 >= 80) {
+      grade = 'Muy bien';
+      msg = 'Buen trabajo: tienes una comprensión sólida. Revisa los temas de las preguntas que fallaste para reforzar.';
+    } else if (score100 >= 60) {
+      grade = 'Suficiente';
+      msg = 'Aprobaste, pero hay conceptos que conviene reforzar antes del proyecto integrador. Te recomiendo repasar las diapositivas teóricas.';
+    } else {
+      grade = 'Necesitas repasar';
+      msg = 'Te recomiendo volver a estudiar el material de la unidad y resolver los ejercicios guiados antes de presentar el proyecto integrador.';
+    }
+
+    document.getElementById('finalGrade').textContent = grade;
+    document.getElementById('finalMsg').textContent = msg;
+
+    // Breakdown
+    const topics = [
+      "P1 · POE: paso de referencia a command",
+      "P2 · POE: identificadores de evento (Return)",
+      "P3 · UX: diferencia UX vs UI",
+      "P4 · UX: heurísticas de Nielsen",
+      "P5 · GUI: gestor de geometría adecuado",
+      "P6 · GUI: widget para entrada de una línea",
+      "P7 · Excepciones: ValueError",
+      "P8 · Excepciones: el bloque finally",
+      "P9 · Pruebas: assertRaises",
+      "P10 · Integradora: excepciones + UX"
+    ];
+
+    const list = document.getElementById('breakdownList');
+    list.innerHTML = '';
+    answers.forEach((a, i) => {
+      const div = document.createElement('div');
+      div.className = 'bk-item';
+      let statusClass, statusText;
+      if (a === null) {
+        statusClass = 'pending'; statusText = 'Sin responder';
+      } else if (a.correct) {
+        statusClass = 'ok'; statusText = '✓ Correcta';
+      } else {
+        statusClass = 'no'; statusText = '✗ Incorrecta';
+      }
+      div.innerHTML = `<span class="topic">${topics[i]}</span><span class="status ${statusClass}">${statusText}</span>`;
+      list.appendChild(div);
+    });
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    if (!confirm('¿Reiniciar el quiz? Se perderán todas tus respuestas.')) return;
+    location.reload();
+  });
+
+  document.getElementById('reviewBtn').addEventListener('click', () => {
+    // Ir a la primera pregunta (slide 3)
+    goTo(3);
+  });
+
+  updateProgress();
+</script>
+
+</body>
+</html>
