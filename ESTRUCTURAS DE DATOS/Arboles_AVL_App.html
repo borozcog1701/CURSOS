@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Árboles AVL · Estructura de Datos · UAEMéx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest-dark: #1B3A2F;
+  --forest: #2C5F2D;
+  --moss: #97BC62;
+  --moss-light: #C8DDA0;
+  --cream: #F8F5EC;
+  --cream-2: #FFFFFF;
+  --charcoal: #2B2B2B;
+  --gray: #5C6B5F;
+  --gray-light: #D9DDD3;
+  --accent: #D9822B;
+  --accent-soft: #F0C896;
+  --red: #B33A3A;
+  --ok: #3D8A4E;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse at top right, rgba(151, 188, 98, 0.08), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(44, 95, 45, 0.05), transparent 50%),
+    var(--cream);
+}
+
+/* ====================== TOP BAR ====================== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--forest-dark);
+  color: var(--cream);
+  border-bottom: 3px solid var(--moss);
+  flex-shrink: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-logo svg { width: 100%; height: 100%; fill: var(--moss); }
+.brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--moss-light);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.progress-pill {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  background: rgba(151, 188, 98, 0.15);
+  border: 1px solid var(--moss);
+  border-radius: 999px;
+  color: var(--moss-light);
+  letter-spacing: 0.08em;
+}
+.progress-bar-outer {
+  width: 220px;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--moss), var(--accent));
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ====================== MAIN STAGE ====================== */
+.stage {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: var(--cream-2);
+  border-right: 1px solid var(--gray-light);
+  overflow-y: auto;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--moss) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--moss); border-radius: 3px; }
+
+.sidebar-title {
+  padding: 16px 18px 8px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gray);
+  font-weight: 600;
+}
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--charcoal);
+  border-left: 3px solid transparent;
+  transition: all 0.18s;
+  position: relative;
+}
+.toc-item:hover {
+  background: var(--moss-light);
+  color: var(--forest-dark);
+}
+.toc-item.active {
+  background: linear-gradient(90deg, var(--moss-light), transparent);
+  border-left-color: var(--forest);
+  color: var(--forest-dark);
+  font-weight: 600;
+}
+.toc-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gray);
+  width: 22px;
+  flex-shrink: 0;
+}
+.toc-item.active .toc-num { color: var(--forest); font-weight: 700; }
+.toc-item.quiz {
+  background: rgba(217, 130, 43, 0.08);
+  border-top: 1px dashed var(--gray-light);
+  margin-top: 4px;
+}
+.toc-item.quiz .toc-num { color: var(--accent); }
+.toc-item.quiz.active {
+  background: linear-gradient(90deg, rgba(217, 130, 43, 0.18), transparent);
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+.toc-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.toc-item.active .toc-icon { opacity: 1; }
+
+/* Slide canvas */
+.canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 60px;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.slide {
+  width: 100%;
+  max-width: 1100px;
+  background: var(--cream-2);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 3px rgba(27, 58, 47, 0.06),
+    0 12px 40px rgba(27, 58, 47, 0.08);
+  padding: 48px 56px;
+  position: relative;
+  min-height: 540px;
+  animation: slideIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slide::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(to bottom, var(--forest), var(--moss));
+  border-radius: 16px 0 0 16px;
+}
+.slide-num {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gray);
+  letter-spacing: 0.1em;
+}
+
+/* Slide content typography */
+.slide h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--forest-dark);
+  line-height: 1.1;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.slide h1 .accent-line {
+  display: block;
+  width: 64px;
+  height: 4px;
+  background: var(--accent);
+  margin-top: 14px;
+  border-radius: 2px;
+}
+.slide .subtitle {
+  font-size: 15px;
+  color: var(--gray);
+  font-style: italic;
+  margin-bottom: 28px;
+  max-width: 800px;
+}
+.slide h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--forest-dark);
+  margin-bottom: 14px;
+}
+.slide h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--forest);
+  margin-bottom: 8px;
+}
+.slide p { line-height: 1.6; font-size: 14.5px; margin-bottom: 12px; }
+.slide ul { margin: 8px 0 14px 20px; }
+.slide ul li {
+  line-height: 1.7;
+  font-size: 14px;
+  padding-left: 6px;
+  margin-bottom: 4px;
+}
+.slide ul li::marker { color: var(--forest); font-weight: 700; }
+
+.slide .grid { display: grid; gap: 18px; }
+.slide .grid.two { grid-template-columns: 1fr 1fr; }
+.slide .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+.card {
+  background: var(--cream-2);
+  border: 1px solid var(--gray-light);
+  border-radius: 10px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.card.tinted { background: linear-gradient(135deg, #fafaf3, #fff); }
+.card-strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--forest);
+}
+.card.accent .card-strip { background: var(--accent); }
+.card.red .card-strip { background: var(--red); }
+.card.ok .card-strip { background: var(--ok); }
+
+.code-block {
+  background: var(--forest-dark);
+  color: var(--moss-light);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-block .kw { color: var(--moss); font-weight: 600; }
+.code-block .cm { color: var(--accent-soft); font-style: italic; }
+
+.formula {
+  background: var(--forest-dark);
+  color: var(--moss);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 8px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 11px;
+  background: var(--forest);
+  color: var(--cream-2);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tag.accent { background: var(--accent); }
+.tag.red { background: var(--red); }
+.tag.ok { background: var(--ok); }
+
+.note-box {
+  background: var(--moss-light);
+  border-left: 4px solid var(--moss);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--forest-dark);
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.note-box .icon { font-size: 18px; }
+
+.comparison-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 12px 0;
+  font-size: 13.5px;
+}
+.comparison-table th {
+  background: var(--forest-dark);
+  color: var(--cream-2);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+.comparison-table th:first-child { border-radius: 8px 0 0 0; }
+.comparison-table th:last-child { border-radius: 0 8px 0 0; }
+.comparison-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--gray-light);
+  font-family: var(--font-mono);
+}
+.comparison-table tr:nth-child(even) td { background: rgba(151, 188, 98, 0.06); }
+.comparison-table .label { font-family: var(--font-body); font-weight: 600; color: var(--charcoal); }
+
+/* SVG tree containers */
+.tree-svg {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Big numbers */
+.big-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 64px;
+  color: var(--forest);
+  line-height: 1;
+}
+.big-num.accent { color: var(--accent); }
+
+/* ====================== NAVIGATION ====================== */
+.nav-arrows {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  border: 1px solid var(--gray-light);
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--forest);
+  box-shadow: 0 4px 14px rgba(27,58,47,0.1);
+  transition: all 0.2s;
+  z-index: 10;
+}
+.nav-arrows:hover {
+  background: var(--forest);
+  color: var(--cream-2);
+  transform: translateY(-50%) scale(1.08);
+}
+.nav-arrows:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.nav-prev { left: 12px; }
+.nav-next { right: 12px; }
+
+.bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 28px;
+  background: var(--cream-2);
+  border-top: 1px solid var(--gray-light);
+  flex-shrink: 0;
+}
+.dot-nav {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gray-light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dot.active {
+  background: var(--forest);
+  width: 22px;
+  border-radius: 4px;
+}
+.dot.quiz { background: var(--accent-soft); }
+.dot.quiz.active { background: var(--accent); }
+.dot:hover { transform: scale(1.3); }
+.kbd-hint {
+  font-size: 11px;
+  color: var(--gray);
+  font-family: var(--font-mono);
+}
+.kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--gray-light);
+  border-radius: 3px;
+  font-size: 10px;
+  margin: 0 2px;
+}
+
+/* ====================== QUIZ ====================== */
+.quiz-intro { text-align: center; padding: 40px 20px; }
+.quiz-intro .icon-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #c46c1d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 36px;
+  color: var(--cream-2);
+  box-shadow: 0 8px 24px rgba(217, 130, 43, 0.3);
+}
+.quiz-intro h1 { font-size: 42px; margin-bottom: 12px; }
+.quiz-intro .lead {
+  font-size: 16px;
+  color: var(--gray);
+  max-width: 620px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+.quiz-meta {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 24px 0 36px;
+}
+.quiz-meta .meta-item { text-align: center; }
+.quiz-meta .meta-val {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 36px;
+  color: var(--forest);
+}
+.quiz-meta .meta-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--gray);
+}
+
+.quiz-question-container {
+  padding: 20px 0;
+}
+.quiz-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  font-size: 12px;
+  color: var(--gray);
+}
+.quiz-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--gray-light);
+  margin: 0 16px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.quiz-progress-bar > div {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.quiz-progress .pill {
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  background: var(--cream);
+  border-radius: 999px;
+}
+
+.quiz-card {
+  background: var(--cream-2);
+  border: 1px solid var(--gray-light);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+}
+.quiz-card .topic-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.quiz-card .question {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--forest-dark);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.quiz-card .question-detail {
+  font-size: 13.5px;
+  color: var(--gray);
+  margin-bottom: 18px;
+}
+.quiz-options { display: flex; flex-direction: column; gap: 10px; }
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--cream);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--charcoal);
+  text-align: left;
+}
+.quiz-option:hover {
+  background: var(--moss-light);
+  transform: translateX(4px);
+}
+.quiz-option.selected {
+  background: var(--moss-light);
+  border-color: var(--forest);
+}
+.quiz-option .letter {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  border: 2px solid var(--gray-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gray);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.quiz-option.selected .letter {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--cream-2);
+}
+.quiz-option.correct {
+  background: rgba(61, 138, 78, 0.12);
+  border-color: var(--ok);
+}
+.quiz-option.correct .letter { background: var(--ok); border-color: var(--ok); color: white; }
+.quiz-option.incorrect {
+  background: rgba(179, 58, 58, 0.1);
+  border-color: var(--red);
+}
+.quiz-option.incorrect .letter { background: var(--red); border-color: var(--red); color: white; }
+.quiz-option:disabled { cursor: default; }
+.quiz-option:disabled:hover { transform: none; }
+
+.feedback-box {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.feedback-box.ok {
+  background: rgba(61, 138, 78, 0.1);
+  border-left: 4px solid var(--ok);
+  color: var(--forest-dark);
+}
+.feedback-box.bad {
+  background: rgba(179, 58, 58, 0.08);
+  border-left: 4px solid var(--red);
+  color: var(--charcoal);
+}
+.feedback-box strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--forest);
+  color: var(--cream-2);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.btn:hover { background: var(--forest-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(27,58,47,0.2); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn.accent { background: var(--accent); }
+.btn.accent:hover { background: #c46c1d; }
+.btn.outline {
+  background: transparent;
+  color: var(--forest);
+  border: 2px solid var(--forest);
+}
+.btn.outline:hover { background: var(--forest); color: var(--cream-2); }
+
+.quiz-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+.quiz-actions .left { display: flex; gap: 10px; }
+
+/* ====================== RESULTS ====================== */
+.results { text-align: center; padding: 20px 20px 40px; }
+.score-display {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 12px auto 24px;
+}
+.score-display svg { transform: rotate(-90deg); }
+.score-display .track { fill: none; stroke: var(--gray-light); stroke-width: 14; }
+.score-display .progress {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.score-percentage {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 54px;
+  line-height: 1;
+}
+.score-grade-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--gray);
+  margin-top: 6px;
+}
+.score-message {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--forest-dark);
+  margin-bottom: 6px;
+}
+.score-detail {
+  color: var(--gray);
+  font-size: 15px;
+  margin-bottom: 22px;
+}
+
+.breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+.breakdown-item {
+  background: var(--cream);
+  border: 1px solid var(--gray-light);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.breakdown-item .num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 30px;
+  line-height: 1;
+}
+.breakdown-item.ok .num { color: var(--ok); }
+.breakdown-item.bad .num { color: var(--red); }
+.breakdown-item.total .num { color: var(--forest); }
+.breakdown-item .lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gray);
+  margin-top: 6px;
+}
+
+.review-section {
+  text-align: left;
+  max-width: 760px;
+  margin: 28px auto 0;
+}
+.review-section h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--forest-dark);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--gray-light);
+}
+.review-item {
+  background: var(--cream);
+  border-left: 4px solid var(--ok);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.review-item.bad { border-left-color: var(--red); }
+.review-item .q { font-weight: 600; color: var(--forest-dark); margin-bottom: 4px; }
+.review-item .a { color: var(--gray); font-family: var(--font-mono); font-size: 12px; }
+.review-item .a.your { color: var(--red); }
+.review-item.bad .a.correct-a { color: var(--ok); margin-top: 4px; }
+
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .canvas { padding: 20px; }
+  .slide { padding: 32px 24px; }
+  .slide h1 { font-size: 26px; }
+  .slide .grid.two, .slide .grid.three { grid-template-columns: 1fr; }
+  .progress-bar-outer { width: 120px; }
+  .brand-sub { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L7 12h3v8h4v-8h3z"/><circle cx="12" cy="22" r="1.5"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-title">Árboles AVL</div>
+      <div class="brand-sub">Estructura de Datos · UAEMéx</div>
+    </div>
+  </div>
+  <div class="progress-info">
+    <div class="progress-pill" id="progressPill">01 / 22</div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+  </div>
+</header>
+
+<div class="stage">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="canvas" id="canvas">
+    <button class="nav-arrows nav-prev" id="prevBtn" aria-label="Anterior">‹</button>
+    <div class="slide" id="slide"></div>
+    <button class="nav-arrows nav-next" id="nextBtn" aria-label="Siguiente">›</button>
+  </div>
+</div>
+
+<footer class="bottombar">
+  <span class="kbd-hint"><span class="kbd">←</span><span class="kbd">→</span> navegar</span>
+  <div class="dot-nav" id="dotNav"></div>
+  <span class="kbd-hint" id="modeIndicator">Lección</span>
+</footer>
+
+<script>
+// =====================================================================
+// SLIDE CONTENT
+// =====================================================================
+
+// Forest & Moss palette (mirrors the PPTX)
+const C = {
+  forestDark: '#1B3A2F', forest: '#2C5F2D', moss: '#97BC62', mossLight: '#C8DDA0',
+  cream: '#F8F5EC', white: '#FFFFFF', charcoal: '#2B2B2B', gray: '#5C6B5F',
+  grayLight: '#D9DDD3', accent: '#D9822B', red: '#B33A3A', ok: '#3D8A4E'
+};
+
+// SVG helpers ---------------------------------------------------------
+function node(cx, cy, label, opts = {}) {
+  const r = opts.r ?? 22;
+  const border = opts.border ?? C.forest;
+  const fill = opts.fill ?? C.white;
+  const fb = opts.fb;
+  let fbLabel = '';
+  if (typeof fb === 'number') {
+    const sign = fb > 0 ? '+' : '';
+    const color = Math.abs(fb) > 1 ? C.red : C.ok;
+    fbLabel = `<text x="${cx + r + 4}" y="${cy + 3}" fill="${color}" font-size="11" font-family="JetBrains Mono, monospace" font-weight="600">FB=${sign}${fb}</text>`;
+  }
+  return `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${border}" stroke-width="2.5"/>
+    <text x="${cx}" y="${cy + 5}" fill="${C.forestDark}" text-anchor="middle" font-size="${opts.fontSize || 14}" font-weight="700" font-family="Fraunces, serif">${label}</text>
+    ${fbLabel}
+  `;
+}
+function edge(x1, y1, x2, y2) {
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.forest}" stroke-width="2"/>`;
+}
+function subtree(x, y, label, w = 28, h = 22) {
+  return `
+    <rect x="${x - w/2}" y="${y - h/2}" width="${w}" height="${h}" fill="${C.grayLight}" stroke="${C.gray}" stroke-width="1"/>
+    <text x="${x}" y="${y + 4}" fill="${C.gray}" text-anchor="middle" font-size="10" font-family="Inter, sans-serif">${label}</text>
+  `;
+}
+function arrow(x, y, label, color = C.accent) {
+  return `
+    <g transform="translate(${x}, ${y})">
+      <polygon points="0,-12 26,0 0,12" fill="${color}" opacity="0.85"/>
+      <text x="13" y="28" fill="${color}" text-anchor="middle" font-size="11" font-style="italic" font-weight="600" font-family="Inter">${label}</text>
+    </g>
+  `;
+}
+
+// =====================================================================
+// SLIDES DATA
+// =====================================================================
+
+const slides = [];
+
+// ─── 1. PORTADA ───────────────────────────────────────────────────────
+slides.push({
+  title: 'Portada',
+  type: 'lesson',
+  html: () => `
+    <div style="min-height: 540px; background: linear-gradient(135deg, ${C.forestDark} 0%, #0F2620 100%); color: ${C.cream}; border-radius: 12px; padding: 60px 56px; margin: -48px -56px; position: relative; overflow: hidden;">
+      <svg style="position: absolute; right: -40px; top: -20px; opacity: 0.25;" width="380" height="280" viewBox="0 0 380 280">
+        <circle cx="290" cy="80" r="34" fill="${C.moss}"/>
+        <circle cx="200" cy="160" r="28" fill="${C.moss}"/>
+        <circle cx="320" cy="180" r="26" fill="${C.moss}"/>
+        <line x1="290" y1="80" x2="200" y2="160" stroke="${C.moss}" stroke-width="3"/>
+        <line x1="290" y1="80" x2="320" y2="180" stroke="${C.moss}" stroke-width="3"/>
+      </svg>
+      <div style="position: relative; z-index: 1; max-width: 720px;">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="${C.cream}" style="margin-bottom: 30px;">
+          <path d="M12 2L7 12h3v8h4v-8h3z"/>
+        </svg>
+        <h1 style="font-family: Fraunces, serif; font-weight: 900; font-size: 78px; color: ${C.cream}; line-height: 1; letter-spacing: -0.03em; margin-bottom: 18px;">
+          ÁRBOLES AVL
+        </h1>
+        <p style="font-family: Fraunces, serif; font-style: italic; font-size: 24px; color: ${C.moss}; margin-bottom: 28px; font-weight: 400;">
+          Estructura, balance y rotaciones paso a paso
+        </p>
+        <div style="width: 80px; height: 4px; background: ${C.accent}; margin-bottom: 28px; border-radius: 2px;"></div>
+        <p style="color: ${C.cream}; font-size: 16px; margin-bottom: 8px; font-weight: 500;">Estructura de Datos · Ingeniería en Computación</p>
+        <p style="color: ${C.mossLight}; font-size: 13px; font-style: italic;">Facultad de Ingeniería · Universidad Autónoma del Estado de México</p>
+        <p style="color: ${C.moss}; font-size: 12px; margin-top: 50px; letter-spacing: 0.1em;">M.C. BETTY · COORDINACIÓN DE DOCENCIA DE INGENIERÍA EN COMPUTACIÓN</p>
+      </div>
+    </div>
+  `
+});
+
+// ─── 2. AGENDA ────────────────────────────────────────────────────────
+slides.push({
+  title: 'Agenda',
+  type: 'lesson',
+  html: () => {
+    const items = [
+      ['Origen y motivación', 'Por qué surge un AVL'],
+      ['Definición formal', 'Altura, factor de balance, invariante'],
+      ['Factor de balance', 'Cómo calcularlo y leerlo'],
+      ['Tipos de rotaciones', 'Simple (LL, RR) y doble (LR, RL)'],
+      ['Detalle de cada rotación', 'Antes / después con pseudocódigo'],
+      ['Ejemplos de inserción', 'Aplicación práctica paso a paso'],
+      ['Eliminación y rebalanceo', 'Cómo varía respecto a la inserción'],
+      ['Complejidad y aplicaciones', 'Por qué se usan en la industria']
+    ];
+    return `
+      <h1>Agenda <span class="accent-line"></span></h1>
+      <p class="subtitle">Lo que cubriremos en esta sesión</p>
+      <div class="grid two" style="gap: 14px; margin-top: 20px;">
+        ${items.map((it, i) => `
+          <div style="display: flex; gap: 14px; padding: 14px; background: ${C.cream}; border-radius: 10px; align-items: center;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: ${C.forest}; color: ${C.white}; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces'; font-weight: 700; font-size: 16px; flex-shrink: 0;">${i + 1}</div>
+            <div>
+              <div style="font-family: 'Fraunces'; font-weight: 600; font-size: 15px; color: ${C.forestDark};">${it[0]}</div>
+              <div style="font-size: 12.5px; color: ${C.gray};">${it[1]}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+});
+
+// ─── 3. ORIGEN Y MOTIVACIÓN ───────────────────────────────────────────
+slides.push({
+  title: 'Origen y motivación',
+  type: 'lesson',
+  html: () => `
+    <h1>Origen y motivación <span class="accent-line"></span></h1>
+    <p class="subtitle">¿Por qué un BST común no siempre nos sirve?</p>
+    <div class="grid two">
+      <div>
+        <h3>📜 Un poco de historia</h3>
+        <p>Propuestos en <strong>1962</strong> por los matemáticos soviéticos
+          <strong style="color: ${C.forest};">G. M. Adelson-Velsky</strong> y
+          <strong style="color: ${C.forest};">E. M. Landis</strong>. Sus iniciales dan nombre a la estructura:
+          <strong style="color: ${C.accent};">A-V-L</strong>.</p>
+
+        <h3 style="margin-top: 18px;">🎯 ¿Qué problema resuelven?</h3>
+        <p>Un BST puede degenerar en una <strong style="color: ${C.red};">lista enlazada</strong> si los datos se insertan ordenados. La búsqueda pasa de <strong>O(log n)</strong> a <strong style="color: ${C.red};">O(n)</strong>.</p>
+        <p style="margin-top: 10px;">El <strong>AVL <span style="color: ${C.ok};">garantiza altura logarítmica</span></strong> realizando <em>rotaciones automáticas</em> cuando detecta un desbalance.</p>
+      </div>
+      <div class="card tinted">
+        <div class="card-strip"></div>
+        <h3 style="text-align: center; margin-bottom: 14px;">BST degenerado vs. AVL balanceado</h3>
+        <svg viewBox="0 0 460 280" class="tree-svg">
+          <text x="115" y="20" text-anchor="middle" font-size="11" fill="${C.gray}" font-style="italic">Inserción: 10, 20, 30, 40, 50</text>
+          ${edge(60, 50, 90, 80)}${edge(90, 80, 120, 110)}${edge(120, 110, 150, 140)}${edge(150, 140, 180, 170)}
+          ${node(60, 50, '10', { r: 18, fontSize: 12, border: C.red })}
+          ${node(90, 80, '20', { r: 18, fontSize: 12, border: C.red })}
+          ${node(120, 110, '30', { r: 18, fontSize: 12, border: C.red })}
+          ${node(150, 140, '40', { r: 18, fontSize: 12, border: C.red })}
+          ${node(180, 170, '50', { r: 18, fontSize: 12, border: C.red })}
+          <text x="115" y="220" text-anchor="middle" fill="${C.red}" font-size="12" font-weight="600" font-style="italic">BST: altura = 5 → O(n)</text>
+
+          ${edge(350, 60, 310, 110)}${edge(350, 60, 390, 110)}
+          ${edge(310, 110, 280, 160)}${edge(390, 110, 420, 160)}
+          ${node(350, 60, '30', { r: 18, fontSize: 12 })}
+          ${node(310, 110, '20', { r: 18, fontSize: 12 })}
+          ${node(390, 110, '40', { r: 18, fontSize: 12 })}
+          ${node(280, 160, '10', { r: 16, fontSize: 11 })}
+          ${node(420, 160, '50', { r: 16, fontSize: 11 })}
+          <text x="350" y="220" text-anchor="middle" fill="${C.ok}" font-size="12" font-weight="600" font-style="italic">AVL: altura = 3 → O(log n)</text>
+        </svg>
+        <div class="note-box" style="margin-top: 10px;"><span class="icon">💡</span>Mismos datos, dos estructuras: la diferencia está en mantener el equilibrio.</div>
+      </div>
+    </div>
+  `
+});
+
+// ─── 4. DEFINICIÓN FORMAL ─────────────────────────────────────────────
+slides.push({
+  title: 'Definición formal',
+  type: 'lesson',
+  html: () => `
+    <h1>Definición formal <span class="accent-line"></span></h1>
+    <p class="subtitle">¿Qué es exactamente un árbol AVL?</p>
+    <p style="background: ${C.cream}; padding: 16px 20px; border-radius: 10px; border-left: 4px solid ${C.forest}; margin-bottom: 22px;">
+      Un <strong>árbol AVL</strong> es un <strong>árbol binario de búsqueda</strong> en el que, para <em>cada nodo</em>, las alturas de sus dos subárboles difieren <strong>como máximo en 1</strong>.
+    </p>
+    <div class="grid three">
+      <div class="card">
+        <div class="card-strip"></div>
+        <h3>📏 Altura h(v)</h3>
+        <p style="font-size: 13.5px;">Número de aristas en el camino más largo desde el nodo hasta una hoja. Por convención, h(nulo) = −1 y h(hoja) = 0.</p>
+      </div>
+      <div class="card accent">
+        <div class="card-strip"></div>
+        <h3>⚖️ Factor de balance</h3>
+        <p style="font-size: 13.5px;">FB(v) = h(izq) − h(der). En un AVL válido siempre se cumple: <strong style="color: ${C.ok};">|FB(v)| ≤ 1</strong>.</p>
+      </div>
+      <div class="card ok">
+        <div class="card-strip"></div>
+        <h3>🔄 Auto-balanceo</h3>
+        <p style="font-size: 13.5px;">Cada inserción o eliminación se rebalancea con <strong>rotaciones</strong>, garantizando altura logarítmica.</p>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 18px;"><span class="icon">🔑</span><strong style="margin-right: 6px;">Invariante AVL:</strong> ∀ nodo v, |h(izq(v)) − h(der(v))| ≤ 1</div>
+  `
+});
+
+// ─── 5. FACTOR DE BALANCE ─────────────────────────────────────────────
+slides.push({
+  title: 'Factor de balance (FB)',
+  type: 'lesson',
+  html: () => `
+    <h1>Factor de balance (FB) <span class="accent-line"></span></h1>
+    <p class="subtitle">Cómo se calcula y cómo interpretarlo</p>
+    <div class="grid two">
+      <div>
+        <h3>Fórmula</h3>
+        <div class="formula">FB(v) = altura(izq) − altura(der)</div>
+        <h3 style="margin-top: 18px;">Lectura de los valores</h3>
+        <ul style="list-style: none; margin-left: 0;">
+          <li style="padding: 6px 0;"><strong style="color: ${C.ok};">FB = 0</strong> → subárboles de igual altura.</li>
+          <li style="padding: 6px 0;"><strong style="color: ${C.ok};">FB = +1</strong> → el izquierdo es más alto por 1.</li>
+          <li style="padding: 6px 0;"><strong style="color: ${C.ok};">FB = −1</strong> → el derecho es más alto por 1.</li>
+          <li style="padding: 6px 0;"><strong style="color: ${C.red};">|FB| &gt; 1</strong> → desbalanceado. Hay que rotar.</li>
+        </ul>
+        <div class="note-box"><span class="icon">📝</span>Algunos textos usan h(der) − h(izq); el signo se invierte pero las reglas son equivalentes.</div>
+      </div>
+      <div class="card tinted">
+        <div class="card-strip"></div>
+        <h3 style="text-align: center;">Ejemplo: ¿está balanceado?</h3>
+        <svg viewBox="0 0 380 260" class="tree-svg">
+          ${edge(190, 50, 120, 110)}${edge(190, 50, 260, 110)}
+          ${edge(120, 110, 70, 170)}${edge(120, 110, 170, 170)}
+          ${edge(260, 110, 310, 170)}
+          ${node(190, 50, '30', { fb: 0, r: 22 })}
+          ${node(120, 110, '20', { fb: 0, r: 20 })}
+          ${node(260, 110, '40', { fb: -1, r: 20 })}
+          ${node(70, 170, '10', { fb: 0, r: 18 })}
+          ${node(170, 170, '25', { fb: 0, r: 18 })}
+          ${node(310, 170, '50', { fb: 0, r: 18 })}
+        </svg>
+        <p style="text-align: center; color: ${C.ok}; font-weight: 700; margin-top: 10px;">✓ Todos los FB ∈ {−1, 0, +1} → es un AVL válido</p>
+      </div>
+    </div>
+  `
+});
+
+// ─── 6. PROPIEDADES Y OPERACIONES ─────────────────────────────────────
+slides.push({
+  title: 'Propiedades y operaciones',
+  type: 'lesson',
+  html: () => `
+    <h1>Propiedades y operaciones <span class="accent-line"></span></h1>
+    <p class="subtitle">Lo que un AVL hereda del BST y lo que añade</p>
+    <table class="comparison-table">
+      <thead><tr><th>Operación</th><th>BST común</th><th>Árbol AVL</th></tr></thead>
+      <tbody>
+        <tr><td class="label">Búsqueda</td><td>O(log n) promedio, O(n) peor</td><td style="color: ${C.ok}; font-weight: 600;">O(log n) garantizado</td></tr>
+        <tr><td class="label">Inserción</td><td>O(log n) promedio, O(n) peor</td><td style="color: ${C.ok}; font-weight: 600;">O(log n) garantizado</td></tr>
+        <tr><td class="label">Eliminación</td><td>O(log n) promedio, O(n) peor</td><td style="color: ${C.ok}; font-weight: 600;">O(log n) garantizado</td></tr>
+        <tr><td class="label">Altura</td><td>Puede ser n − 1 (lista)</td><td style="color: ${C.ok}; font-weight: 600;">h ≤ 1.44 · log₂(n+2)</td></tr>
+        <tr><td class="label">Recorridos</td><td>O(n) (inorden, preorden...)</td><td>O(n) (mismos algoritmos)</td></tr>
+      </tbody>
+    </table>
+    <div class="grid two" style="margin-top: 18px;">
+      <div class="card ok">
+        <div class="card-strip"></div>
+        <h3>✓ Ventajas</h3>
+        <ul style="margin-top: 4px;">
+          <li>Búsquedas siempre rápidas, sin importar el orden de inserción.</li>
+          <li>Altura estrictamente logarítmica.</li>
+          <li>Mismas operaciones que un BST + balanceo automático.</li>
+        </ul>
+      </div>
+      <div class="card accent">
+        <div class="card-strip"></div>
+        <h3>⚠️ Costo</h3>
+        <ul style="margin-top: 4px;">
+          <li>Insertar y eliminar requieren actualizar alturas y FB.</li>
+          <li>Posible costo extra por rotaciones (O(log n)).</li>
+          <li>Más memoria por nodo (guardar altura o FB).</li>
+        </ul>
+      </div>
+    </div>
+  `
+});
+
+// ─── 7. LOS 4 TIPOS DE DESBALANCE ────────────────────────────────────
+slides.push({
+  title: 'Los 4 tipos de desbalance',
+  type: 'lesson',
+  html: () => {
+    const cases = [
+      { code: 'LL', title: 'Izquierda – Izquierda', rot: 'Rotación simple a la derecha', color: C.forest, nodes: [[100, 30, 'A', 2], [60, 75, 'B', 1], [20, 120, 'C']], lines: [[100, 30, 60, 75], [60, 75, 20, 120]] },
+      { code: 'RR', title: 'Derecha – Derecha', rot: 'Rotación simple a la izquierda', color: C.forest, nodes: [[20, 30, 'A', -2], [60, 75, 'B', -1], [100, 120, 'C']], lines: [[20, 30, 60, 75], [60, 75, 100, 120]] },
+      { code: 'LR', title: 'Izquierda – Derecha', rot: 'Rotación doble izq-der', color: C.accent, nodes: [[60, 30, 'A', 2], [20, 75, 'B', -1], [60, 120, 'C']], lines: [[60, 30, 20, 75], [20, 75, 60, 120]] },
+      { code: 'RL', title: 'Derecha – Izquierda', rot: 'Rotación doble der-izq', color: C.accent, nodes: [[60, 30, 'A', -2], [100, 75, 'B', 1], [60, 120, 'C']], lines: [[60, 30, 100, 75], [100, 75, 60, 120]] }
+    ];
+    return `
+      <h1>Los 4 tipos de desbalance <span class="accent-line"></span></h1>
+      <p class="subtitle">Cada caso requiere un tipo específico de rotación</p>
+      <div class="grid two" style="margin-top: 8px;">
+        ${cases.map(c => `
+          <div class="card" style="display: flex; gap: 16px; align-items: center; padding: 18px 20px; ${c.code.startsWith('L') === (c.code[1] === c.code[0]) || c.code === 'LR' ? '' : ''}">
+            <div class="card-strip" style="background: ${c.color};"></div>
+            <div style="flex-shrink: 0;">
+              <div style="font-size: 10px; letter-spacing: 0.15em; color: ${C.gray}; font-weight: 700;">CASO</div>
+              <div class="big-num" style="color: ${c.color}; font-size: 52px;">${c.code}</div>
+            </div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0 0 4px;">${c.title}</h3>
+              <p style="font-size: 12.5px; font-style: italic; color: ${c.color}; margin: 0;">${c.rot}</p>
+            </div>
+            <svg viewBox="0 0 130 150" style="width: 100px; height: 110px; flex-shrink: 0;">
+              ${c.lines.map(l => edge(...l)).join('')}
+              ${c.nodes.map(n => node(n[0], n[1], n[2], { r: 14, fontSize: 11, fb: n[3] })).join('')}
+            </svg>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+});
+
+// ─── 8. ROTACIÓN SIMPLE DERECHA (LL) ─────────────────────────────────
+slides.push({
+  title: 'Rotación simple a la derecha (LL)',
+  type: 'lesson',
+  html: () => `
+    <h1>Rotación simple a la derecha <span class="accent-line"></span></h1>
+    <p class="subtitle">Caso LL: insertamos en el subárbol izquierdo del hijo izquierdo</p>
+    <div style="display: inline-block;"><span class="tag">CASO LL</span></div>
+    <div class="grid two" style="margin-top: 18px;">
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="color: ${C.charcoal};">ANTES — z desbalanceado</h3>
+        <svg viewBox="0 0 300 240" class="tree-svg">
+          ${edge(170, 40, 100, 100)}${edge(170, 40, 240, 100)}
+          ${edge(100, 100, 50, 160)}${edge(100, 100, 150, 160)}
+          ${edge(50, 160, 25, 215)}${edge(50, 160, 75, 215)}
+          ${node(170, 40, 'z', { fb: 2, r: 22, border: C.red })}
+          ${node(100, 100, 'y', { fb: 1, r: 20 })}
+          ${node(50, 160, 'x', { fb: 0, r: 18 })}
+          ${subtree(25, 215, 'T1')}${subtree(75, 215, 'T2')}
+          ${subtree(150, 160, 'T3')}${subtree(240, 100, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="color: ${C.ok};">DESPUÉS — y nuevo padre</h3>
+        <svg viewBox="0 0 300 240" class="tree-svg">
+          ${edge(150, 50, 80, 110)}${edge(150, 50, 220, 110)}
+          ${edge(80, 110, 50, 175)}${edge(80, 110, 110, 175)}
+          ${edge(220, 110, 190, 175)}${edge(220, 110, 250, 175)}
+          ${node(150, 50, 'y', { fb: 0, r: 22, border: C.ok })}
+          ${node(80, 110, 'x', { fb: 0, r: 20 })}
+          ${node(220, 110, 'z', { fb: 0, r: 20 })}
+          ${subtree(50, 175, 'T1')}${subtree(110, 175, 'T2')}
+          ${subtree(190, 175, 'T3')}${subtree(250, 175, 'T4')}
+        </svg>
+      </div>
+    </div>
+    <div class="code-block" style="margin-top: 16px;"><span class="kw">rotarDerecha(z):</span>
+    <span class="cm"># y ← z.izq ;  T3 ← y.der</span>
+    y.der ← z ;  z.izq ← T3 ;  <span class="cm">actualizar alturas(z, y)</span>
+    <span class="kw">⇒ retornar y como nueva raíz</span></div>
+  `
+});
+
+// ─── 9. ROTACIÓN SIMPLE IZQUIERDA (RR) ───────────────────────────────
+slides.push({
+  title: 'Rotación simple a la izquierda (RR)',
+  type: 'lesson',
+  html: () => `
+    <h1>Rotación simple a la izquierda <span class="accent-line"></span></h1>
+    <p class="subtitle">Caso RR: insertamos en el subárbol derecho del hijo derecho</p>
+    <div style="display: inline-block;"><span class="tag">CASO RR</span></div>
+    <div class="grid two" style="margin-top: 18px;">
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="color: ${C.charcoal};">ANTES — z desbalanceado</h3>
+        <svg viewBox="0 0 300 240" class="tree-svg">
+          ${edge(130, 40, 60, 100)}${edge(130, 40, 200, 100)}
+          ${edge(200, 100, 150, 160)}${edge(200, 100, 250, 160)}
+          ${edge(250, 160, 225, 215)}${edge(250, 160, 275, 215)}
+          ${node(130, 40, 'z', { fb: -2, r: 22, border: C.red })}
+          ${node(200, 100, 'y', { fb: -1, r: 20 })}
+          ${node(250, 160, 'x', { fb: 0, r: 18 })}
+          ${subtree(60, 100, 'T1')}${subtree(150, 160, 'T2')}
+          ${subtree(225, 215, 'T3')}${subtree(275, 215, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="color: ${C.ok};">DESPUÉS — y nuevo padre</h3>
+        <svg viewBox="0 0 300 240" class="tree-svg">
+          ${edge(150, 50, 80, 110)}${edge(150, 50, 220, 110)}
+          ${edge(80, 110, 50, 175)}${edge(80, 110, 110, 175)}
+          ${edge(220, 110, 190, 175)}${edge(220, 110, 250, 175)}
+          ${node(150, 50, 'y', { fb: 0, r: 22, border: C.ok })}
+          ${node(80, 110, 'z', { fb: 0, r: 20 })}
+          ${node(220, 110, 'x', { fb: 0, r: 20 })}
+          ${subtree(50, 175, 'T1')}${subtree(110, 175, 'T2')}
+          ${subtree(190, 175, 'T3')}${subtree(250, 175, 'T4')}
+        </svg>
+      </div>
+    </div>
+    <div class="code-block" style="margin-top: 16px;"><span class="kw">rotarIzquierda(z):</span>
+    <span class="cm"># y ← z.der ;  T2 ← y.izq</span>
+    y.izq ← z ;  z.der ← T2 ;  <span class="cm">actualizar alturas(z, y)</span>
+    <span class="kw">⇒ retornar y como nueva raíz</span></div>
+  `
+});
+
+// ─── 10. ROTACIÓN DOBLE LR ───────────────────────────────────────────
+slides.push({
+  title: 'Rotación doble Izq-Der (LR)',
+  type: 'lesson',
+  html: () => `
+    <h1>Rotación doble Izquierda-Derecha <span class="accent-line"></span></h1>
+    <p class="subtitle">Caso LR: rotación izquierda en el hijo, luego rotación derecha en el nodo</p>
+    <div style="display: inline-block;"><span class="tag accent">CASO LR</span></div>
+    <div class="grid three" style="margin-top: 18px;">
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px;">1) ANTES</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(130, 30, 70, 80)}${edge(130, 30, 175, 80)}
+          ${edge(70, 80, 30, 135)}${edge(70, 80, 110, 135)}
+          ${edge(110, 135, 90, 195)}${edge(110, 135, 130, 195)}
+          ${node(130, 30, 'z', { fb: 2, r: 18, fontSize: 12, border: C.red })}
+          ${node(70, 80, 'y', { fb: -1, r: 16, fontSize: 11 })}
+          ${node(110, 135, 'x', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(30, 135, 'T1')}${subtree(90, 195, 'T2')}
+          ${subtree(130, 195, 'T3')}${subtree(175, 80, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px; color: ${C.accent};">2) Rotar y a la izq</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(130, 30, 70, 80)}${edge(130, 30, 175, 80)}
+          ${edge(70, 80, 30, 135)}${edge(70, 80, 110, 135)}
+          ${edge(30, 135, 15, 195)}${edge(30, 135, 50, 195)}
+          ${node(130, 30, 'z', { fb: 2, r: 18, fontSize: 12, border: C.red })}
+          ${node(70, 80, 'x', { fb: 1, r: 16, fontSize: 11 })}
+          ${node(30, 135, 'y', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(15, 195, 'T1')}${subtree(50, 195, 'T2')}
+          ${subtree(110, 135, 'T3')}${subtree(175, 80, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px; color: ${C.ok};">3) Rotar z a la der</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(100, 35, 50, 95)}${edge(100, 35, 150, 95)}
+          ${edge(50, 95, 30, 160)}${edge(50, 95, 70, 160)}
+          ${edge(150, 95, 130, 160)}${edge(150, 95, 170, 160)}
+          ${node(100, 35, 'x', { fb: 0, r: 18, fontSize: 12, border: C.ok })}
+          ${node(50, 95, 'y', { fb: 0, r: 16, fontSize: 11 })}
+          ${node(150, 95, 'z', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(30, 160, 'T1')}${subtree(70, 160, 'T2')}
+          ${subtree(130, 160, 'T3')}${subtree(170, 160, 'T4')}
+        </svg>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 14px;"><span class="icon">💡</span><strong style="margin-right: 6px;">Regla:</strong>rotación doble = rotación simple en el hijo + rotación simple opuesta en el nodo desbalanceado.</div>
+  `
+});
+
+// ─── 11. ROTACIÓN DOBLE RL ───────────────────────────────────────────
+slides.push({
+  title: 'Rotación doble Der-Izq (RL)',
+  type: 'lesson',
+  html: () => `
+    <h1>Rotación doble Derecha-Izquierda <span class="accent-line"></span></h1>
+    <p class="subtitle">Caso RL: rotación derecha en el hijo, luego rotación izquierda en el nodo</p>
+    <div style="display: inline-block;"><span class="tag accent">CASO RL</span></div>
+    <div class="grid three" style="margin-top: 18px;">
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px;">1) ANTES</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(70, 30, 25, 80)}${edge(70, 30, 130, 80)}
+          ${edge(130, 80, 90, 135)}${edge(130, 80, 170, 135)}
+          ${edge(90, 135, 70, 195)}${edge(90, 135, 110, 195)}
+          ${node(70, 30, 'z', { fb: -2, r: 18, fontSize: 12, border: C.red })}
+          ${node(130, 80, 'y', { fb: 1, r: 16, fontSize: 11 })}
+          ${node(90, 135, 'x', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(25, 80, 'T1')}${subtree(70, 195, 'T2')}
+          ${subtree(110, 195, 'T3')}${subtree(170, 135, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px; color: ${C.accent};">2) Rotar y a la der</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(70, 30, 25, 80)}${edge(70, 30, 130, 80)}
+          ${edge(130, 80, 90, 135)}${edge(130, 80, 170, 135)}
+          ${edge(170, 135, 150, 195)}${edge(170, 135, 190, 195)}
+          ${node(70, 30, 'z', { fb: -2, r: 18, fontSize: 12, border: C.red })}
+          ${node(130, 80, 'x', { fb: -1, r: 16, fontSize: 11 })}
+          ${node(170, 135, 'y', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(25, 80, 'T1')}${subtree(90, 135, 'T2')}
+          ${subtree(150, 195, 'T3')}${subtree(190, 195, 'T4')}
+        </svg>
+      </div>
+      <div class="card tinted" style="text-align: center;">
+        <h3 style="font-size: 14px; color: ${C.ok};">3) Rotar z a la izq</h3>
+        <svg viewBox="0 0 200 220" class="tree-svg">
+          ${edge(100, 35, 50, 95)}${edge(100, 35, 150, 95)}
+          ${edge(50, 95, 30, 160)}${edge(50, 95, 70, 160)}
+          ${edge(150, 95, 130, 160)}${edge(150, 95, 170, 160)}
+          ${node(100, 35, 'x', { fb: 0, r: 18, fontSize: 12, border: C.ok })}
+          ${node(50, 95, 'z', { fb: 0, r: 16, fontSize: 11 })}
+          ${node(150, 95, 'y', { fb: 0, r: 16, fontSize: 11 })}
+          ${subtree(30, 160, 'T1')}${subtree(70, 160, 'T2')}
+          ${subtree(130, 160, 'T3')}${subtree(170, 160, 'T4')}
+        </svg>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 14px;"><span class="icon">🔁</span><strong style="margin-right: 6px;">RL es el espejo de LR.</strong>Identifica primero el caso (LL, RR, LR, RL) y aplica las rotaciones en orden.</div>
+  `
+});
+
+// ─── 12. DIAGRAMA DE DECISIÓN ────────────────────────────────────────
+slides.push({
+  title: '¿Qué rotación aplicar?',
+  type: 'lesson',
+  html: () => `
+    <h1>¿Qué rotación aplicar? <span class="accent-line"></span></h1>
+    <p class="subtitle">Árbol de decisión para identificar el caso correcto</p>
+    <div style="background: ${C.cream}; padding: 24px; border-radius: 12px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="display: inline-block; padding: 12px 24px; background: ${C.forestDark}; color: ${C.cream}; border-radius: 8px; font-family: 'Fraunces'; font-weight: 700;">
+          Detectaste |FB(z)| &gt; 1
+        </div>
+      </div>
+      <div class="grid two" style="gap: 30px;">
+        <div>
+          <div style="background: ${C.white}; padding: 14px 18px; border-radius: 10px; border-left: 4px solid ${C.forest};">
+            <strong style="color: ${C.forest};">FB(z) &gt; 0</strong> → desbalance a la izquierda
+          </div>
+          <div style="margin-top: 14px; padding-left: 20px; border-left: 2px dashed ${C.moss};">
+            <div style="background: ${C.white}; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid ${C.forest};">
+              <strong>FB(hijo izq) ≥ 0</strong> → <span class="tag" style="font-size: 9px;">LL</span><br>
+              <span style="font-size: 12px; color: ${C.gray};">Rotar a la derecha</span>
+            </div>
+            <div style="background: ${C.white}; padding: 12px 16px; border-radius: 8px; border-left: 3px solid ${C.accent};">
+              <strong>FB(hijo izq) &lt; 0</strong> → <span class="tag accent" style="font-size: 9px;">LR</span><br>
+              <span style="font-size: 12px; color: ${C.gray};">Rotar izq-der (doble)</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="background: ${C.white}; padding: 14px 18px; border-radius: 10px; border-left: 4px solid ${C.forest};">
+            <strong style="color: ${C.forest};">FB(z) &lt; 0</strong> → desbalance a la derecha
+          </div>
+          <div style="margin-top: 14px; padding-left: 20px; border-left: 2px dashed ${C.moss};">
+            <div style="background: ${C.white}; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid ${C.forest};">
+              <strong>FB(hijo der) ≤ 0</strong> → <span class="tag" style="font-size: 9px;">RR</span><br>
+              <span style="font-size: 12px; color: ${C.gray};">Rotar a la izquierda</span>
+            </div>
+            <div style="background: ${C.white}; padding: 12px 16px; border-radius: 8px; border-left: 3px solid ${C.accent};">
+              <strong>FB(hijo der) &gt; 0</strong> → <span class="tag accent" style="font-size: 9px;">RL</span><br>
+              <span style="font-size: 12px; color: ${C.gray};">Rotar der-izq (doble)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+});
+
+// ─── 13. EJEMPLO INSERCIÓN PARTE 1 ───────────────────────────────────
+slides.push({
+  title: 'Ejemplo: insertar 10, 20, 30...',
+  type: 'lesson',
+  html: () => `
+    <h1>Ejemplo completo · Parte 1 <span class="accent-line"></span></h1>
+    <p class="subtitle">Insertar 10, 20, 30 → primer rebalanceo</p>
+    <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
+      ${[
+        { t: '1) Insertar 10', col: C.forest, svg: `${node(70, 60, '10', { fb: 0 })}`, note: 'FB(10) = 0', noteColor: C.ok, sub: 'Árbol balanceado' },
+        { t: '2) Insertar 20', col: C.forest, svg: `${edge(50, 50, 90, 100)}${node(50, 50, '10', { fb: -1, r: 18, fontSize: 12 })}${node(90, 100, '20', { fb: 0, r: 18, fontSize: 12 })}`, note: 'FB(10) = −1', noteColor: C.ok, sub: 'Todavía balanceado' },
+        { t: '3) Insertar 30 ⇒ desb.', col: C.red, svg: `${edge(40, 40, 70, 90)}${edge(70, 90, 100, 140)}${node(40, 40, '10', { fb: -2, r: 16, fontSize: 11, border: C.red })}${node(70, 90, '20', { fb: -1, r: 16, fontSize: 11 })}${node(100, 140, '30', { fb: 0, r: 16, fontSize: 11 })}`, note: 'FB(10) = −2 → caso RR', noteColor: C.red, sub: 'Aplicar rotación izq.' },
+        { t: '4) Rotar a la izquierda', col: C.ok, svg: `${edge(70, 50, 40, 110)}${edge(70, 50, 100, 110)}${node(70, 50, '20', { fb: 0, r: 18, fontSize: 12, border: C.ok })}${node(40, 110, '10', { fb: 0, r: 16, fontSize: 11 })}${node(100, 110, '30', { fb: 0, r: 16, fontSize: 11 })}`, note: 'FB ∈ {−1, 0, +1}', noteColor: C.ok, sub: 'AVL restaurado ✓' }
+      ].map(s => `
+        <div class="card tinted" style="padding: 12px; text-align: center;">
+          <div style="background: ${s.col}; color: ${C.white}; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 4px; margin: -4px -4px 10px;">${s.t}</div>
+          <svg viewBox="0 0 140 180" style="width: 100%; height: 140px;">${s.svg}</svg>
+          <p style="font-size: 11px; color: ${s.noteColor}; font-weight: 600; margin-top: 4px;">${s.note}</p>
+          <p style="font-size: 10px; color: ${C.gray}; font-style: italic;">${s.sub}</p>
+        </div>
+      `).join('')}
+    </div>
+    <p style="text-align: center; color: ${C.accent}; font-style: italic; margin-top: 16px; font-size: 13px;">Continuamos insertando 40, 50 y 25 en la siguiente diapositiva →</p>
+  `
+});
+
+// ─── 14. EJEMPLO INSERCIÓN PARTE 2 ───────────────────────────────────
+slides.push({
+  title: 'Ejemplo: continuación',
+  type: 'lesson',
+  html: () => `
+    <h1>Ejemplo completo · Parte 2 <span class="accent-line"></span></h1>
+    <p class="subtitle">Insertar 40, 50, 25 → segunda rotación</p>
+    <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px;">
+      ${[
+        { t: '5) Insertar 40', col: C.forest, svg: `${edge(70, 40, 40, 90)}${edge(70, 40, 100, 90)}${edge(100, 90, 130, 140)}${node(70, 40, '20', { fb: -1, r: 15, fontSize: 11 })}${node(40, 90, '10', { fb: 0, r: 14, fontSize: 10 })}${node(100, 90, '30', { fb: -1, r: 14, fontSize: 10 })}${node(130, 140, '40', { fb: 0, r: 14, fontSize: 10 })}`, sub: 'Sigue balanceado', subColor: C.ok },
+        { t: '6) Insertar 50 ⇒ desb.', col: C.red, svg: `${edge(70, 35, 35, 80)}${edge(70, 35, 100, 80)}${edge(100, 80, 130, 125)}${edge(130, 125, 145, 170)}${node(70, 35, '20', { fb: -2, r: 15, fontSize: 11, border: C.red })}${node(35, 80, '10', { fb: 0, r: 13, fontSize: 10 })}${node(100, 80, '30', { fb: -2, r: 13, fontSize: 10, border: C.red })}${node(130, 125, '40', { fb: -1, r: 12, fontSize: 9 })}${node(145, 170, '50', { fb: 0, r: 12, fontSize: 9 })}`, sub: 'FB(20)=−2 → RR', subColor: C.red },
+        { t: '7) Rotar a la izquierda', col: C.ok, svg: `${edge(70, 40, 35, 90)}${edge(70, 40, 105, 90)}${edge(35, 90, 15, 140)}${edge(105, 90, 130, 140)}${node(70, 40, '30', { fb: 0, r: 15, fontSize: 11, border: C.ok })}${node(35, 90, '20', { fb: 0, r: 13, fontSize: 10 })}${node(105, 90, '40', { fb: -1, r: 13, fontSize: 10 })}${node(15, 140, '10', { fb: 0, r: 12, fontSize: 9 })}${node(130, 140, '50', { fb: 0, r: 12, fontSize: 9 })}`, sub: 'Balanceado ✓', subColor: C.ok },
+        { t: '8) Insertar 25', col: C.forest, svg: `${edge(70, 40, 35, 90)}${edge(70, 40, 105, 90)}${edge(35, 90, 15, 140)}${edge(35, 90, 55, 140)}${edge(105, 90, 130, 140)}${node(70, 40, '30', { fb: 1, r: 15, fontSize: 11 })}${node(35, 90, '20', { fb: -1, r: 13, fontSize: 10 })}${node(105, 90, '40', { fb: -1, r: 13, fontSize: 10 })}${node(15, 140, '10', { fb: 0, r: 12, fontSize: 9 })}${node(55, 140, '25', { fb: 0, r: 12, fontSize: 9 })}${node(130, 140, '50', { fb: 0, r: 12, fontSize: 9 })}`, sub: 'FB ∈ {−1, 0, 1}', subColor: C.ok }
+      ].map(s => `
+        <div class="card tinted" style="padding: 12px; text-align: center;">
+          <div style="background: ${s.col}; color: ${C.white}; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 4px; margin: -4px -4px 10px;">${s.t}</div>
+          <svg viewBox="0 0 160 200" style="width: 100%; height: 150px;">${s.svg}</svg>
+          <p style="font-size: 11px; color: ${s.subColor}; font-weight: 600; font-style: italic; margin-top: 4px;">${s.sub}</p>
+        </div>
+      `).join('')}
+    </div>
+    <div class="note-box" style="margin-top: 14px;"><span class="icon">✓</span><strong style="margin-right: 6px;">Resultado final:</strong>árbol AVL con 6 nodos, altura 2, búsquedas en O(log n).</div>
+  `
+});
+
+// ─── 15. ALGORITMO DE INSERCIÓN ──────────────────────────────────────
+slides.push({
+  title: 'Algoritmo de inserción',
+  type: 'lesson',
+  html: () => `
+    <h1>Algoritmo de inserción <span class="accent-line"></span></h1>
+    <p class="subtitle">Inserción + rebalanceo en pseudocódigo Python</p>
+    <div class="grid two">
+      <div>
+        <h3>Pasos del algoritmo</h3>
+        <ol style="padding-left: 22px; margin-top: 8px;">
+          <li style="padding: 5px 0; font-size: 14px;"><strong>Inserción BST estándar</strong> según la clave.</li>
+          <li style="padding: 5px 0; font-size: 14px;"><strong>Actualizar altura</strong> del nuevo nodo y sus ancestros.</li>
+          <li style="padding: 5px 0; font-size: 14px;"><strong>Calcular FB</strong> en cada ancestro al regresar.</li>
+          <li style="padding: 5px 0; font-size: 14px;">Si |FB| &gt; 1, identificar caso (LL/RR/LR/RL).</li>
+          <li style="padding: 5px 0; font-size: 14px;"><strong>Aplicar rotación</strong> correspondiente.</li>
+          <li style="padding: 5px 0; font-size: 14px;">Retornar la nueva raíz del subárbol.</li>
+        </ol>
+        <div class="note-box"><span class="icon">⚡</span>En inserción basta con <strong>una rotación</strong> para restaurar el balance.</div>
+      </div>
+      <div class="code-block" style="font-size: 11.5px;"><span class="kw">def</span> insertar(nodo, clave):
+    <span class="cm"># 1. Inserción BST normal</span>
+    <span class="kw">if</span> nodo <span class="kw">is None</span>:
+        <span class="kw">return</span> Nodo(clave)
+    <span class="kw">if</span> clave &lt; nodo.clave:
+        nodo.izq = insertar(nodo.izq, clave)
+    <span class="kw">else</span>:
+        nodo.der = insertar(nodo.der, clave)
+
+    <span class="cm"># 2. Actualizar altura</span>
+    nodo.altura = 1 + max(h(nodo.izq), h(nodo.der))
+
+    <span class="cm"># 3. Calcular FB</span>
+    fb = h(nodo.izq) − h(nodo.der)
+
+    <span class="cm"># 4. LL</span>
+    <span class="kw">if</span> fb &gt; 1 <span class="kw">and</span> clave &lt; nodo.izq.clave:
+        <span class="kw">return</span> rotarDerecha(nodo)
+    <span class="cm"># RR</span>
+    <span class="kw">if</span> fb &lt; −1 <span class="kw">and</span> clave &gt; nodo.der.clave:
+        <span class="kw">return</span> rotarIzquierda(nodo)
+    <span class="cm"># LR</span>
+    <span class="kw">if</span> fb &gt; 1 <span class="kw">and</span> clave &gt; nodo.izq.clave:
+        nodo.izq = rotarIzquierda(nodo.izq)
+        <span class="kw">return</span> rotarDerecha(nodo)
+    <span class="cm"># RL</span>
+    <span class="kw">if</span> fb &lt; −1 <span class="kw">and</span> clave &lt; nodo.der.clave:
+        nodo.der = rotarDerecha(nodo.der)
+        <span class="kw">return</span> rotarIzquierda(nodo)
+    <span class="kw">return</span> nodo</div>
+    </div>
+  `
+});
+
+// ─── 16. ELIMINACIÓN ─────────────────────────────────────────────────
+slides.push({
+  title: 'Eliminación en un AVL',
+  type: 'lesson',
+  html: () => `
+    <h1>Eliminación en un AVL <span class="accent-line"></span></h1>
+    <p class="subtitle">Igual que en un BST + rebalanceo desde el padre del nodo eliminado</p>
+    <h3>Tres casos de eliminación (igual que en un BST):</h3>
+    <div class="grid three" style="margin-top: 10px;">
+      <div class="card"><div class="card-strip"></div>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><span style="width: 26px; height: 26px; border-radius: 50%; background: ${C.forest}; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">1</span> Hoja</h3>
+        <p style="font-size: 13px;">Eliminar el nodo directamente (poner su enlace a null en el padre).</p>
+      </div>
+      <div class="card"><div class="card-strip"></div>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><span style="width: 26px; height: 26px; border-radius: 50%; background: ${C.forest}; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">2</span> Un hijo</h3>
+        <p style="font-size: 13px;">Sustituir el nodo por su único hijo (saltar el enlace).</p>
+      </div>
+      <div class="card"><div class="card-strip"></div>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><span style="width: 26px; height: 26px; border-radius: 50%; background: ${C.forest}; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;">3</span> Dos hijos</h3>
+        <p style="font-size: 13px;">Reemplazar por predecesor o sucesor in-order y eliminar este último.</p>
+      </div>
+    </div>
+    <div style="background: ${C.forestDark}; color: ${C.cream}; padding: 22px 26px; border-radius: 12px; margin-top: 20px;">
+      <h3 style="color: ${C.moss}; margin-bottom: 10px;">🔄 Rebalanceo posterior</h3>
+      <ol style="padding-left: 22px;">
+        <li style="margin-bottom: 6px;"><strong style="color: ${C.moss};">Subir</strong> desde el padre del nodo eliminado hasta la raíz.</li>
+        <li style="margin-bottom: 6px;"><strong style="color: ${C.moss};">Actualizar</strong> altura y FB en cada ancestro.</li>
+        <li style="margin-bottom: 6px;">Si |FB| &gt; 1, aplicar la rotación correspondiente (LL, RR, LR, RL).</li>
+        <li><strong style="color: ${C.accent};">Diferencia clave:</strong> en eliminación pueden necesitarse <strong style="color: ${C.accent};">varias rotaciones en cascada</strong> hasta la raíz; en inserción basta con una.</li>
+      </ol>
+    </div>
+  `
+});
+
+// ─── 17. COMPLEJIDAD ─────────────────────────────────────────────────
+slides.push({
+  title: 'Complejidad computacional',
+  type: 'lesson',
+  html: () => `
+    <h1>Complejidad computacional <span class="accent-line"></span></h1>
+    <p class="subtitle">¿Cuánto importa mantener el balance?</p>
+    <div class="grid two">
+      <div>
+        <h3>Comportamiento asintótico</h3>
+        <ul style="margin-top: 8px;">
+          <li><strong>Lista enlazada:</strong> búsqueda O(n) — recorre todos los nodos.</li>
+          <li><strong>BST sin balance:</strong> O(log n) promedio, pero <strong style="color:${C.red}">O(n) en el peor caso</strong>.</li>
+          <li><strong style="color: ${C.ok};">AVL:</strong> O(log n) garantizado siempre, gracias a h ≤ 1.44 · log₂(n+2).</li>
+        </ul>
+        <div class="note-box"><span class="icon">📊</span>Con n = 1 000 000 nodos: O(n) = 1 000 000 pasos; O(log n) ≈ 20 pasos.</div>
+      </div>
+      <div class="card tinted">
+        <div class="card-strip"></div>
+        <h3 style="text-align: center;">Crecimiento comparado</h3>
+        <svg viewBox="0 0 420 260" class="tree-svg">
+          <line x1="40" y1="220" x2="400" y2="220" stroke="${C.gray}" stroke-width="1.5"/>
+          <line x1="40" y1="220" x2="40" y2="20" stroke="${C.gray}" stroke-width="1.5"/>
+          <text x="220" y="245" text-anchor="middle" font-size="11" fill="${C.gray}">Tamaño n →</text>
+          <text x="14" y="120" text-anchor="middle" font-size="11" fill="${C.gray}" transform="rotate(-90 14 120)">Pasos</text>
+
+          <polyline points="40,220 100,180 160,140 220,100 280,60 340,30 400,20" fill="none" stroke="${C.red}" stroke-width="3"/>
+          <text x="290" y="50" fill="${C.red}" font-size="12" font-weight="600">O(n) — Lista / BST peor</text>
+
+          <polyline points="40,220 100,210 160,200 220,185 280,160 340,130 400,100" fill="none" stroke="${C.accent}" stroke-width="3" stroke-dasharray="6 4"/>
+          <text x="240" y="160" fill="${C.accent}" font-size="11" font-weight="600">O(n log n)</text>
+
+          <polyline points="40,220 100,210 160,205 220,200 280,196 340,193 400,190" fill="none" stroke="${C.ok}" stroke-width="3"/>
+          <text x="220" y="210" fill="${C.ok}" font-size="12" font-weight="600">O(log n) — AVL ✓</text>
+        </svg>
+      </div>
+    </div>
+  `
+});
+
+// ─── 18. COMPARACIÓN CON OTROS ÁRBOLES ───────────────────────────────
+slides.push({
+  title: 'AVL vs. Rojo-Negro vs. B-Tree',
+  type: 'lesson',
+  html: () => `
+    <h1>AVL vs. Rojo-Negro vs. B-Tree <span class="accent-line"></span></h1>
+    <p class="subtitle">No todos los árboles balanceados son iguales</p>
+    <table class="comparison-table">
+      <thead><tr><th>Criterio</th><th>AVL</th><th>Rojo-Negro</th><th>B-Tree</th></tr></thead>
+      <tbody>
+        <tr><td class="label">Búsqueda</td><td>Muy rápida</td><td>Rápida</td><td>Óptima en disco</td></tr>
+        <tr><td class="label">Inserción / eliminación</td><td>Más rotaciones</td><td style="color: ${C.ok}; font-weight: 600;">Menos rotaciones</td><td>Manejo por bloques</td></tr>
+        <tr><td class="label">Altura</td><td style="color: ${C.ok}; font-weight: 600;">≤ 1.44 log₂ n</td><td>≤ 2 log₂(n+1)</td><td>log_m n</td></tr>
+        <tr><td class="label">Usos típicos</td><td>Datos en RAM, lecturas frecuentes</td><td>Linux kernel, std::map, TreeMap</td><td>Bases de datos, sistemas de archivos</td></tr>
+      </tbody>
+    </table>
+    <div class="grid three" style="margin-top: 16px;">
+      <div class="card ok">
+        <div class="card-strip"></div>
+        <h3>Cuándo AVL</h3>
+        <p style="font-size: 13px;">Lecturas frecuentes, pocas modificaciones, datos en memoria.</p>
+      </div>
+      <div class="card">
+        <div class="card-strip"></div>
+        <h3>Cuándo Rojo-Negro</h3>
+        <p style="font-size: 13px;">Muchas inserciones/eliminaciones, librerías estándar.</p>
+      </div>
+      <div class="card accent">
+        <div class="card-strip"></div>
+        <h3>Cuándo B-Tree</h3>
+        <p style="font-size: 13px;">Almacenamiento en disco, índices de bases de datos.</p>
+      </div>
+    </div>
+  `
+});
+
+// ─── 19. APLICACIONES PRÁCTICAS ──────────────────────────────────────
+slides.push({
+  title: 'Aplicaciones prácticas',
+  type: 'lesson',
+  html: () => {
+    const apps = [
+      { ico: '🗄️', t: 'Bases de datos en memoria', d: 'Índices ordenados con búsquedas garantizadas en O(log n).' },
+      { ico: '🔎', t: 'Buscadores y diccionarios', d: 'Estructuras tipo set/map en bibliotecas estándar.' },
+      { ico: '🎮', t: 'Geometría computacional', d: 'Mantener conjuntos ordenados en simulaciones y videojuegos.' },
+      { ico: '📡', t: 'Redes y enrutamiento', d: 'Tablas de búsqueda con tiempos predecibles.' },
+      { ico: '🧮', t: 'Compiladores', d: 'Tablas de símbolos de identificadores y tipos.' },
+      { ico: '📊', t: 'Análisis en tiempo real', d: 'Datos en streaming que requieren consultas estables.' }
+    ];
+    return `
+      <h1>Aplicaciones prácticas <span class="accent-line"></span></h1>
+      <p class="subtitle">¿Dónde se usan los AVL en la industria?</p>
+      <div class="grid three">
+        ${apps.map(a => `
+          <div class="card tinted" style="padding: 18px; text-align: left;">
+            <div class="card-strip"></div>
+            <div style="font-size: 30px; margin-bottom: 8px;">${a.ico}</div>
+            <h3 style="font-size: 15px; margin-bottom: 4px;">${a.t}</h3>
+            <p style="font-size: 12.5px; color: ${C.gray};">${a.d}</p>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+});
+
+// ─── 20. EJERCICIOS PROPUESTOS ───────────────────────────────────────
+slides.push({
+  title: 'Ejercicios propuestos',
+  type: 'lesson',
+  html: () => {
+    const exs = [
+      { t: 'Insertar y rebalancear', d: 'Partiendo de un AVL vacío, inserta 50, 30, 20, 40, 70, 60, 80, 35. Dibuja el árbol resultante en cada paso.' },
+      { t: 'Identificar el caso', d: 'Dado un árbol desbalanceado, indica si corresponde a LL, RR, LR o RL y aplica la rotación.' },
+      { t: 'Eliminación con cascada', d: 'Elimina el nodo raíz del árbol del ejercicio 1 y muestra todas las rotaciones necesarias.' },
+      { t: 'Implementar en Python', d: 'Escribe la clase NodoAVL con método `insertar(clave)` y método `inorden()`.' },
+      { t: 'Comparar con BST', d: 'Inserta los mismos datos en un BST sin balance y en un AVL; compara las alturas resultantes.' },
+      { t: 'Cuatro casos mínimos', d: 'Diseña un ejemplo mínimo de 3 nodos para cada uno de los 4 casos (LL, RR, LR, RL). Dibuja antes y después.' }
+    ];
+    return `
+      <h1>Ejercicios propuestos <span class="accent-line"></span></h1>
+      <p class="subtitle">Para practicar en clase y en casa</p>
+      <div class="grid two" style="gap: 14px;">
+        ${exs.map((e, i) => `
+          <div style="display: flex; gap: 14px; padding: 14px 16px; background: ${C.cream}; border-radius: 10px; border-left: 3px solid ${C.forest};">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: ${C.forest}; color: ${C.white}; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces'; font-weight: 700; font-size: 14px; flex-shrink: 0;">${i + 1}</div>
+            <div>
+              <h3 style="font-size: 14px; margin-bottom: 4px;">${e.t}</h3>
+              <p style="font-size: 12.5px; color: ${C.gray}; line-height: 1.5;">${e.d}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+});
+
+// ─── 21. CONSEJOS Y ERRORES COMUNES ──────────────────────────────────
+slides.push({
+  title: 'Consejos y errores comunes',
+  type: 'lesson',
+  html: () => `
+    <h1>Consejos y errores comunes <span class="accent-line"></span></h1>
+    <p class="subtitle">Lo que aprendí enseñando esto durante años</p>
+    <div class="grid two">
+      <div class="card ok">
+        <div class="card-strip"></div>
+        <h3>✅ Buenas prácticas</h3>
+        <ul style="margin-top: 6px;">
+          <li>Identifica primero el caso (LL/RR/LR/RL) antes de rotar.</li>
+          <li>Trabaja recursivamente: arregla los subárboles primero.</li>
+          <li>Actualiza alturas/FB <em>al regresar</em> de la recursión.</li>
+          <li>Dibuja en papel antes de programar.</li>
+          <li>Verifica con casos pequeños (3-5 nodos).</li>
+        </ul>
+      </div>
+      <div class="card red">
+        <div class="card-strip"></div>
+        <h3>❌ Errores frecuentes</h3>
+        <ul style="margin-top: 6px;">
+          <li>Confundir LR con LL: revisa el FB del <em>hijo</em>.</li>
+          <li>No actualizar alturas después de rotar.</li>
+          <li>Aplicar rotación al nodo equivocado (al hijo en lugar del padre).</li>
+          <li>Olvidar reconectar los subárboles T1, T2, T3, T4.</li>
+          <li>No considerar rotaciones en cascada al eliminar.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top: 16px;"><span class="icon">🎯</span>El secreto está en la <strong style="margin: 0 4px;">disciplina de hacer paso a paso</strong>: inserción BST → actualizar altura → verificar FB → identificar caso → rotar. Siempre en ese orden.</div>
+  `
+});
+
+// ─── 22. CIERRE ──────────────────────────────────────────────────────
+slides.push({
+  title: 'Síntesis',
+  type: 'lesson',
+  html: () => `
+    <div style="min-height: 540px; background: linear-gradient(135deg, ${C.forestDark} 0%, #0F2620 100%); color: ${C.cream}; border-radius: 12px; padding: 50px 56px; margin: -48px -56px;">
+      <h1 style="color: ${C.cream}; font-size: 42px;">Síntesis <span style="display: block; width: 64px; height: 4px; background: ${C.accent}; margin-top: 14px; border-radius: 2px;"></span></h1>
+      <p style="color: ${C.mossLight}; margin-top: 8px; margin-bottom: 30px; font-style: italic; font-size: 16px;">Lo que debes recordar de los árboles AVL</p>
+      <div class="grid two" style="gap: 16px;">
+        ${[
+          ['🌳 Árbol binario de búsqueda', 'Conservan todas las propiedades de un BST.'],
+          ['⚖️ Invariante AVL', 'Para todo nodo: |FB| ≤ 1, donde FB = h(izq) − h(der).'],
+          ['🔄 Auto-balanceo', 'Después de cada inserción o eliminación se rebalancea con rotaciones.'],
+          ['🎯 Cuatro casos', 'LL y RR se resuelven con rotación simple; LR y RL con doble.'],
+          ['⚡ Complejidad garantizada', 'Búsqueda, inserción y eliminación en O(log n) siempre.'],
+          ['🚀 Ideal para...', 'Datos en memoria con muchas búsquedas y modificaciones moderadas.']
+        ].map(([t, d]) => `
+          <div style="background: rgba(151, 188, 98, 0.1); border: 1px solid rgba(151, 188, 98, 0.25); border-radius: 10px; padding: 14px 18px;">
+            <h3 style="color: ${C.moss}; font-size: 15px; margin-bottom: 4px;">${t}</h3>
+            <p style="color: ${C.cream}; font-size: 13px; opacity: 0.9; margin: 0;">${d}</p>
+          </div>
+        `).join('')}
+      </div>
+      <p style="color: ${C.mossLight}; text-align: center; margin-top: 28px; font-style: italic; font-size: 14px;">¡A practicar! Continúa con el quiz para evaluar tu comprensión →</p>
+    </div>
+  `
+});
+
+// =====================================================================
+// QUIZ DATA
+// =====================================================================
+
+const quizQuestions = [
+  {
+    topic: 'Definición',
+    q: '¿Cuál es la condición que debe cumplir TODO nodo de un árbol AVL?',
+    detail: 'Recuerda la invariante fundamental que define a esta estructura.',
+    options: [
+      'La diferencia de alturas entre sus subárboles izquierdo y derecho es como máximo 1.',
+      'Sus dos subárboles tienen exactamente la misma altura.',
+      'El subárbol izquierdo siempre es más alto que el derecho.',
+      'Cada nodo tiene a lo sumo dos hijos.'
+    ],
+    correct: 0,
+    feedback: {
+      ok: 'El invariante AVL es |FB(v)| ≤ 1 para todo nodo v, donde FB = h(izq) − h(der).',
+      bad: 'La opción correcta es la primera: |h(izq) − h(der)| ≤ 1. La opción D describe un árbol binario en general, no específicamente un AVL.'
+    }
+  },
+  {
+    topic: 'Factor de balance',
+    q: 'Si un nodo tiene FB = +2, ¿qué significa?',
+    detail: 'Piensa en la fórmula FB = altura(izq) − altura(der) y en la regla de validez del AVL.',
+    options: [
+      'El árbol está balanceado correctamente.',
+      'El subárbol derecho es 2 niveles más alto que el izquierdo.',
+      'El subárbol izquierdo es 2 niveles más alto que el derecho, hay desbalance.',
+      'El nodo tiene exactamente 2 hijos.'
+    ],
+    correct: 2,
+    feedback: {
+      ok: 'FB = +2 indica desbalance: el subárbol izquierdo excede al derecho en 2 niveles. Hay que rotar.',
+      bad: 'FB positivo significa que el lado izquierdo pesa más. Con |FB| > 1 (en este caso +2), el árbol está desbalanceado y requiere rotación.'
+    }
+  },
+  {
+    topic: 'Tipos de rotación',
+    q: '¿Cuántos tipos de rotaciones distintos existen para rebalancear un AVL?',
+    detail: 'Considera los cuatro casos de desbalance posibles.',
+    options: ['2 (simple y doble)', '4 (LL, RR, LR, RL)', '3 (izquierda, derecha, doble)', '6 (uno por nivel)'],
+    correct: 1,
+    feedback: {
+      ok: 'Los cuatro casos son LL, RR, LR y RL. LL y RR se resuelven con rotación simple; LR y RL con doble.',
+      bad: 'Son 4 casos: LL (rotación simple derecha), RR (rotación simple izquierda), LR (doble izq-der) y RL (doble der-izq).'
+    }
+  },
+  {
+    topic: 'Identificar caso',
+    q: 'Si FB(z) = +2 y FB(z.izq) = +1, ¿qué tipo de rotación aplicas?',
+    detail: 'Sigue el árbol de decisión: primero el signo de FB(z), luego el signo del FB del hijo del lado pesado.',
+    options: [
+      'Rotación doble LR',
+      'Rotación simple izquierda (RR)',
+      'Rotación simple derecha (LL)',
+      'Rotación doble RL'
+    ],
+    correct: 2,
+    feedback: {
+      ok: 'FB(z) > 0 indica desbalance izquierdo y FB(hijo izq) ≥ 0 confirma caso LL: rotación simple a la derecha.',
+      bad: 'Cuando FB(z) > 0 y FB del hijo izquierdo también es ≥ 0, es caso LL → rotación simple a la derecha. Si fuera FB(hijo) < 0, sería LR (doble).'
+    }
+  },
+  {
+    topic: 'Caso LR',
+    q: '¿En qué consiste una rotación doble izquierda-derecha (LR)?',
+    detail: 'Una rotación doble combina dos rotaciones simples en orden específico.',
+    options: [
+      'Dos rotaciones a la derecha consecutivas en el nodo desbalanceado.',
+      'Primero una rotación izquierda en el hijo izquierdo, luego una rotación derecha en el nodo desbalanceado.',
+      'Primero rotación derecha en el hijo, luego izquierda en el nodo.',
+      'Una rotación a la izquierda en el nodo desbalanceado solamente.'
+    ],
+    correct: 1,
+    feedback: {
+      ok: 'En LR primero rotas el hijo izquierdo a la izquierda (lo convierte en caso LL), y luego rotas el nodo desbalanceado a la derecha.',
+      bad: 'LR significa: izquierda en el hijo, derecha en el padre desbalanceado. El nombre describe el orden de las dos rotaciones aplicadas.'
+    }
+  },
+  {
+    topic: 'Complejidad',
+    q: '¿Cuál es la complejidad garantizada de búsqueda, inserción y eliminación en un AVL?',
+    detail: 'Esta es la principal ventaja del AVL sobre un BST sin balance.',
+    options: ['O(1) constante', 'O(n) lineal', 'O(n log n)', 'O(log n) logarítmica'],
+    correct: 3,
+    feedback: {
+      ok: 'Como el AVL garantiza h ≤ 1.44 · log₂(n+2), todas las operaciones son O(log n) en el peor caso.',
+      bad: 'La respuesta es O(log n). Esa es la razón principal de usar AVL en lugar de un BST común: garantiza esta complejidad incluso en el peor caso.'
+    }
+  },
+  {
+    topic: 'Inserción',
+    q: 'Insertas en un AVL vacío las claves 10, 20 y 30 en ese orden. ¿Qué pasa con FB(10)?',
+    detail: 'Visualiza paso a paso: ¿cómo queda el árbol antes de cualquier rotación?',
+    options: [
+      'FB(10) = 0, todo está balanceado.',
+      'FB(10) = +1, el árbol sigue balanceado.',
+      'FB(10) = −2, hay desbalance y se aplicará una rotación a la izquierda (caso RR).',
+      'FB(10) = +2, hay desbalance y se aplicará una rotación a la derecha (caso LL).'
+    ],
+    correct: 2,
+    feedback: {
+      ok: 'Al insertar 10→20→30 forman una cadena hacia la derecha. FB(10) = −2 (caso RR) → rotación simple a la izquierda.',
+      bad: 'La cadena 10-20-30 inclina el árbol a la derecha, así que FB(10) = h(izq) − h(der) = 0 − 2 = −2. Es el caso RR clásico.'
+    }
+  },
+  {
+    topic: 'Eliminación',
+    q: '¿Qué diferencia importante hay entre la eliminación y la inserción en un AVL?',
+    detail: 'Piensa en cuántas rotaciones pueden necesitarse en cada caso.',
+    options: [
+      'No hay diferencias significativas, ambas funcionan igual.',
+      'La eliminación nunca requiere rotaciones.',
+      'En eliminación pueden necesitarse varias rotaciones en cascada hasta la raíz; en inserción basta con una.',
+      'La inserción es O(n) y la eliminación es O(log n).'
+    ],
+    correct: 2,
+    feedback: {
+      ok: 'La eliminación puede propagar el desbalance hacia ancestros, requiriendo varias rotaciones; la inserción se detiene después de una.',
+      bad: 'La diferencia clave: tras una rotación de inserción el desbalance se resuelve; en eliminación el cambio de altura puede propagarse en cascada hasta la raíz.'
+    }
+  },
+  {
+    topic: 'Historia',
+    q: '¿En qué año fueron propuestos los árboles AVL y por quién?',
+    detail: 'Las iniciales A-V-L vienen de los apellidos de sus creadores.',
+    options: [
+      '1972 por Donald Knuth.',
+      '1962 por los matemáticos soviéticos Adelson-Velsky y Landis.',
+      '1985 por Robert Sedgewick.',
+      '1958 por Edsger Dijkstra.'
+    ],
+    correct: 1,
+    feedback: {
+      ok: 'Adelson-Velsky y Landis los propusieron en 1962. Sus iniciales A-V-L dan nombre a la estructura.',
+      bad: 'Fueron propuestos en 1962 por G. M. Adelson-Velsky y E. M. Landis, dos matemáticos soviéticos. Sus iniciales dan nombre a la estructura.'
+    }
+  },
+  {
+    topic: 'Aplicación',
+    q: '¿En cuál de los siguientes escenarios un árbol AVL es especialmente adecuado?',
+    detail: 'Recuerda los puntos fuertes del AVL: garantía logarítmica en lecturas.',
+    options: [
+      'Almacenamiento en disco con bloques grandes (mejor un B-tree).',
+      'Datos en memoria con muchas búsquedas y modificaciones moderadas.',
+      'Una caché LRU donde el orden de inserción importa más que el valor.',
+      'Almacenar una secuencia FIFO de eventos.'
+    ],
+    correct: 1,
+    feedback: {
+      ok: 'AVL brilla en memoria cuando las búsquedas son frecuentes. Para disco se usa B-tree y para FIFO una cola.',
+      bad: 'AVL es ideal para datos en RAM con muchas búsquedas. Para disco se prefiere B-tree; para FIFO se usan colas, no árboles balanceados.'
+    }
+  }
+];
+
+// =====================================================================
+// QUIZ STATE
+// =====================================================================
+
+const totalSlides = slides.length; // 22 lesson slides
+let currentSlide = 0; // 0..(totalSlides + quizQuestions.length + 1)
+// The "virtual" indexes after lesson slides:
+//  - lesson slides:        0 .. totalSlides - 1
+//  - quiz intro:           totalSlides
+//  - quiz questions:       totalSlides + 1 .. totalSlides + quizQuestions.length
+//  - quiz results:         totalSlides + quizQuestions.length + 1
+const QUIZ_INTRO_IDX = totalSlides;
+const FIRST_QUIZ_Q_IDX = totalSlides + 1;
+const RESULTS_IDX = totalSlides + quizQuestions.length + 1;
+const TOTAL_SCREENS = RESULTS_IDX + 1;
+
+const quizState = {
+  answers: new Array(quizQuestions.length).fill(null), // selected option index per question
+  locked: new Array(quizQuestions.length).fill(false), // whether the question has been confirmed
+  submitted: false
+};
+
+// =====================================================================
+// RENDER
+// =====================================================================
+
+const slideEl = document.getElementById('slide');
+const sidebarEl = document.getElementById('sidebar');
+const progressBar = document.getElementById('progressBar');
+const progressPill = document.getElementById('progressPill');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const dotNav = document.getElementById('dotNav');
+const modeIndicator = document.getElementById('modeIndicator');
+
+function buildSidebar() {
+  let html = '<div class="sidebar-title">Lección</div>';
+  slides.forEach((s, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    html += `<div class="toc-item" data-idx="${i}"><span class="toc-num">${num}</span><span>${s.title}</span></div>`;
+  });
+  html += '<div class="sidebar-title" style="margin-top: 12px;">Evaluación</div>';
+  html += `<div class="toc-item quiz" data-idx="${QUIZ_INTRO_IDX}"><span class="toc-num">📝</span><span>Quiz introducción</span></div>`;
+  quizQuestions.forEach((_, i) => {
+    html += `<div class="toc-item quiz" data-idx="${FIRST_QUIZ_Q_IDX + i}"><span class="toc-num">Q${i + 1}</span><span>Pregunta ${i + 1}</span></div>`;
+  });
+  html += `<div class="toc-item quiz" data-idx="${RESULTS_IDX}"><span class="toc-num">🏆</span><span>Resultados</span></div>`;
+  sidebarEl.innerHTML = html;
+  sidebarEl.querySelectorAll('.toc-item').forEach(el => {
+    el.addEventListener('click', () => navigateTo(parseInt(el.dataset.idx)));
+  });
+}
+
+function buildDots() {
+  let html = '';
+  for (let i = 0; i < TOTAL_SCREENS; i++) {
+    const isQuiz = i >= QUIZ_INTRO_IDX;
+    html += `<div class="dot ${isQuiz ? 'quiz' : ''}" data-idx="${i}"></div>`;
+  }
+  dotNav.innerHTML = html;
+  dotNav.querySelectorAll('.dot').forEach(el => {
+    el.addEventListener('click', () => navigateTo(parseInt(el.dataset.idx)));
+  });
+}
+
+function updateProgress() {
+  const pct = ((currentSlide + 1) / TOTAL_SCREENS) * 100;
+  progressBar.style.width = pct + '%';
+  const cur = String(currentSlide + 1).padStart(2, '0');
+  const tot = String(TOTAL_SCREENS).padStart(2, '0');
+  progressPill.textContent = `${cur} / ${tot}`;
+
+  // Sidebar active
+  sidebarEl.querySelectorAll('.toc-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === currentSlide);
+  });
+  // Dots
+  dotNav.querySelectorAll('.dot').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === currentSlide);
+  });
+  // Mode indicator
+  modeIndicator.textContent = currentSlide < QUIZ_INTRO_IDX ? 'Lección' : (currentSlide === RESULTS_IDX ? 'Resultados' : 'Quiz');
+  // Disable buttons at ends
+  prevBtn.disabled = currentSlide === 0;
+  nextBtn.disabled = currentSlide === TOTAL_SCREENS - 1;
+}
+
+function renderSlide() {
+  // Scroll back to top of canvas
+  document.getElementById('canvas').scrollTop = 0;
+
+  if (currentSlide < totalSlides) {
+    // Lesson slide
+    slideEl.innerHTML = slides[currentSlide].html();
+  } else if (currentSlide === QUIZ_INTRO_IDX) {
+    slideEl.innerHTML = renderQuizIntro();
+  } else if (currentSlide >= FIRST_QUIZ_Q_IDX && currentSlide < RESULTS_IDX) {
+    const qi = currentSlide - FIRST_QUIZ_Q_IDX;
+    slideEl.innerHTML = renderQuestion(qi);
+    attachQuestionHandlers(qi);
+  } else if (currentSlide === RESULTS_IDX) {
+    slideEl.innerHTML = renderResults();
+    attachResultsHandlers();
+  }
+  updateProgress();
+}
+
+function navigateTo(idx) {
+  if (idx < 0 || idx >= TOTAL_SCREENS) return;
+  // Force user to land on RESULTS only after submitting
+  if (idx === RESULTS_IDX && !quizState.submitted) {
+    // Allow nav through sidebar, but show a partial state — that's ok; results render handles unanswered.
+  }
+  currentSlide = idx;
+  renderSlide();
+}
+
+prevBtn.addEventListener('click', () => navigateTo(currentSlide - 1));
+nextBtn.addEventListener('click', () => navigateTo(currentSlide + 1));
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') navigateTo(currentSlide + 1);
+  else if (e.key === 'ArrowLeft') navigateTo(currentSlide - 1);
+  else if (e.key === 'Home') navigateTo(0);
+  else if (e.key === 'End') navigateTo(TOTAL_SCREENS - 1);
+});
+
+// =====================================================================
+// QUIZ RENDERING
+// =====================================================================
+
+function renderQuizIntro() {
+  const answered = quizState.locked.filter(Boolean).length;
+  return `
+    <div class="quiz-intro">
+      <div class="icon-circle">📝</div>
+      <h1 style="font-size: 42px;">Evaluación final<span class="accent-line" style="margin: 14px auto;"></span></h1>
+      <p class="lead">Ahora pondrás a prueba lo aprendido sobre árboles AVL. Son <strong>${quizQuestions.length} preguntas</strong> de opción múltiple con retroalimentación inmediata.</p>
+      <div class="quiz-meta">
+        <div class="meta-item">
+          <div class="meta-val">${quizQuestions.length}</div>
+          <div class="meta-lbl">Preguntas</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-val">100</div>
+          <div class="meta-lbl">Pts. máximos</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-val">60</div>
+          <div class="meta-lbl">Pts. aprobar</div>
+        </div>
+      </div>
+      <div style="background: ${C.cream}; padding: 18px 22px; border-radius: 10px; border-left: 4px solid ${C.forest}; text-align: left; max-width: 640px; margin: 0 auto 28px;">
+        <h3 style="font-size: 15px;">Instrucciones</h3>
+        <ul style="font-size: 13px; margin-top: 6px; color: ${C.charcoal};">
+          <li>Selecciona la respuesta que consideres correcta y presiona <strong>Confirmar</strong>.</li>
+          <li>Recibirás retroalimentación inmediata por cada pregunta.</li>
+          <li>No podrás cambiar tu respuesta una vez confirmada.</li>
+          <li>Al final verás tu calificación y un repaso de tus respuestas.</li>
+        </ul>
+      </div>
+      ${answered > 0 ? `<p style="color: ${C.accent}; font-size: 13px; margin-bottom: 14px;">Llevas ${answered} de ${quizQuestions.length} preguntas respondidas.</p>` : ''}
+      <button class="btn accent" id="startQuizBtn">${answered === 0 ? 'Empezar quiz' : 'Continuar quiz'} →</button>
+    </div>
+  `;
+}
+
+function renderQuestion(qi) {
+  const q = quizQuestions[qi];
+  const sel = quizState.answers[qi];
+  const locked = quizState.locked[qi];
+  const isCorrect = sel === q.correct;
+  const progressPct = ((qi + 1) / quizQuestions.length) * 100;
+
+  return `
+    <div class="quiz-question-container">
+      <div class="quiz-progress">
+        <span class="pill">Pregunta ${qi + 1} de ${quizQuestions.length}</span>
+        <div class="quiz-progress-bar"><div style="width: ${progressPct}%;"></div></div>
+        <span style="font-family: var(--font-mono);">${Math.round(progressPct)}%</span>
+      </div>
+      <div class="quiz-card">
+        <div class="topic-tag">${q.topic}</div>
+        <div class="question">${q.q}</div>
+        <div class="question-detail">${q.detail}</div>
+        <div class="quiz-options">
+          ${q.options.map((opt, i) => {
+            const letter = String.fromCharCode(65 + i); // A, B, C, D
+            let classes = 'quiz-option';
+            if (sel === i && !locked) classes += ' selected';
+            if (locked) {
+              if (i === q.correct) classes += ' correct';
+              else if (i === sel) classes += ' incorrect';
+            }
+            return `
+              <button class="${classes}" data-opt="${i}" ${locked ? 'disabled' : ''}>
+                <span class="letter">${letter}</span>
+                <span>${opt}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+        ${locked ? `
+          <div class="feedback-box ${isCorrect ? 'ok' : 'bad'}">
+            <strong>${isCorrect ? '✓ ¡Correcto!' : '✗ Respuesta incorrecta'}</strong>
+            ${isCorrect ? q.feedback.ok : q.feedback.bad}
+          </div>
+        ` : ''}
+      </div>
+      <div class="quiz-actions">
+        <div class="left">
+          <button class="btn outline" id="prevQBtn">← Anterior</button>
+        </div>
+        <div>
+          ${!locked
+            ? `<button class="btn accent" id="confirmBtn" ${sel === null ? 'disabled' : ''}>Confirmar respuesta</button>`
+            : (qi === quizQuestions.length - 1
+                ? `<button class="btn accent" id="finishBtn">Ver resultados →</button>`
+                : `<button class="btn accent" id="nextQBtn">Siguiente pregunta →</button>`)
+          }
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachQuestionHandlers(qi) {
+  const q = quizQuestions[qi];
+  const optionEls = slideEl.querySelectorAll('.quiz-option');
+  optionEls.forEach(el => {
+    el.addEventListener('click', () => {
+      if (quizState.locked[qi]) return;
+      quizState.answers[qi] = parseInt(el.dataset.opt);
+      renderSlide();
+    });
+  });
+
+  const prev = document.getElementById('prevQBtn');
+  if (prev) prev.addEventListener('click', () => navigateTo(currentSlide - 1));
+
+  const confirm = document.getElementById('confirmBtn');
+  if (confirm) confirm.addEventListener('click', () => {
+    if (quizState.answers[qi] === null) return;
+    quizState.locked[qi] = true;
+    renderSlide();
+  });
+
+  const next = document.getElementById('nextQBtn');
+  if (next) next.addEventListener('click', () => navigateTo(currentSlide + 1));
+
+  const finish = document.getElementById('finishBtn');
+  if (finish) finish.addEventListener('click', () => {
+    quizState.submitted = true;
+    navigateTo(RESULTS_IDX);
+  });
+}
+
+// =====================================================================
+// RESULTS
+// =====================================================================
+
+function calcScore() {
+  let correct = 0;
+  let incorrect = 0;
+  let unanswered = 0;
+  quizQuestions.forEach((q, i) => {
+    if (!quizState.locked[i]) unanswered++;
+    else if (quizState.answers[i] === q.correct) correct++;
+    else incorrect++;
+  });
+  const pct = Math.round((correct / quizQuestions.length) * 100);
+  return { correct, incorrect, unanswered, pct };
+}
+
+function gradeMessage(pct) {
+  if (pct === 100) return { color: C.ok, msg: '¡Perfecto!', detail: 'Dominas a fondo los árboles AVL. Excelente trabajo.', grade: 'A+' };
+  if (pct >= 90) return { color: C.ok, msg: 'Excelente', detail: 'Comprensión sólida con muy pocos detalles por reforzar.', grade: 'A' };
+  if (pct >= 80) return { color: C.ok, msg: 'Muy bien', detail: 'Buen dominio del tema; revisa los puntos que fallaste.', grade: 'B' };
+  if (pct >= 70) return { color: C.accent, msg: 'Bien', detail: 'Hay comprensión, pero conviene repasar algunos conceptos.', grade: 'C' };
+  if (pct >= 60) return { color: C.accent, msg: 'Suficiente', detail: 'Aprobado, pero te recomiendo repasar los temas marcados.', grade: 'D' };
+  return { color: C.red, msg: 'A repasar', detail: 'Hay conceptos importantes que debes revisar antes de continuar.', grade: 'F' };
+}
+
+function renderResults() {
+  const { correct, incorrect, unanswered, pct } = calcScore();
+  const grade = gradeMessage(pct);
+  const circumference = 2 * Math.PI * 80;
+  const offset = circumference * (1 - pct / 100);
+
+  const reviewItems = quizQuestions.map((q, i) => {
+    if (!quizState.locked[i]) return null;
+    const ok = quizState.answers[i] === q.correct;
+    return `
+      <div class="review-item ${ok ? '' : 'bad'}">
+        <div class="q">${i + 1}. ${q.q}</div>
+        <div class="a ${ok ? '' : 'your'}">${ok ? '✓' : '✗'} Tu respuesta: ${String.fromCharCode(65 + quizState.answers[i])}) ${q.options[quizState.answers[i]]}</div>
+        ${!ok ? `<div class="a correct-a">✓ Correcta: ${String.fromCharCode(65 + q.correct)}) ${q.options[q.correct]}</div>` : ''}
+      </div>
+    `;
+  }).filter(Boolean).join('');
+
+  return `
+    <div class="results">
+      <p style="font-size: 11px; letter-spacing: 0.2em; color: ${C.gray}; text-transform: uppercase; margin-bottom: 6px;">CALIFICACIÓN FINAL</p>
+      <div class="score-display">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle class="track" cx="100" cy="100" r="80"/>
+          <circle class="progress" cx="100" cy="100" r="80"
+            stroke="${grade.color}"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="score-text">
+          <div class="score-percentage" style="color: ${grade.color};">${pct}<span style="font-size: 28px;">%</span></div>
+          <div class="score-grade-label">Calificación ${grade.grade}</div>
+        </div>
+      </div>
+      <div class="score-message" style="color: ${grade.color};">${grade.msg}</div>
+      <p class="score-detail">${grade.detail}</p>
+
+      <div class="breakdown">
+        <div class="breakdown-item ok">
+          <div class="num">${correct}</div>
+          <div class="lbl">Correctas</div>
+        </div>
+        <div class="breakdown-item bad">
+          <div class="num">${incorrect}</div>
+          <div class="lbl">Incorrectas</div>
+        </div>
+        <div class="breakdown-item total">
+          <div class="num">${correct}/${quizQuestions.length}</div>
+          <div class="lbl">${unanswered > 0 ? unanswered + ' sin responder' : 'Total'}</div>
+        </div>
+      </div>
+
+      ${reviewItems ? `
+        <div class="review-section">
+          <h3>📋 Repaso de tus respuestas</h3>
+          ${reviewItems}
+        </div>
+      ` : ''}
+
+      <div class="results-actions">
+        <button class="btn outline" id="reviewLessonBtn">📚 Volver a la lección</button>
+        <button class="btn" id="retryBtn">🔄 Reintentar quiz</button>
+        <button class="btn accent" id="printBtn">🖨️ Imprimir resultados</button>
+      </div>
+    </div>
+  `;
+}
+
+function attachResultsHandlers() {
+  document.getElementById('reviewLessonBtn').addEventListener('click', () => navigateTo(0));
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    quizState.answers = new Array(quizQuestions.length).fill(null);
+    quizState.locked = new Array(quizQuestions.length).fill(false);
+    quizState.submitted = false;
+    navigateTo(QUIZ_INTRO_IDX);
+  });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+}
+
+// =====================================================================
+// Quiz intro handler
+// =====================================================================
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'startQuizBtn') {
+    // jump to first unanswered or first question
+    const firstUnanswered = quizState.locked.findIndex(v => !v);
+    const targetQ = firstUnanswered === -1 ? 0 : firstUnanswered;
+    navigateTo(FIRST_QUIZ_Q_IDX + targetQ);
+  }
+});
+
+// =====================================================================
+// INIT
+// =====================================================================
+buildSidebar();
+buildDots();
+renderSlide();
+</script>
+
+</body>
+</html>
